@@ -213,6 +213,9 @@ export class GameManager {
       const intendedAction = processedActions.find(p => p.observed.botId === action.botId)?.intended;
       if (intendedAction && intendedAction.action === 'Beg') {
         const gameAction = intendedAction as GameAction & { amount?: number; reason?: string };
+        // Apply -1 sat cost for begging
+        satChanges[intendedAction.botId] = (satChanges[intendedAction.botId] || 0) - 1;
+        
         const begRequest = {
           botId: intendedAction.botId,
           amount: gameAction.amount || 5,

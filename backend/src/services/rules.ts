@@ -36,9 +36,13 @@ export const GAME_RULES = `
 
 ### 5. Beg
 - Intent: Request sats from user/observer (NOT opponent)
-- Must specify amount and reason
-- User can approve or deny with comment
+- Cost: -1 sat (always, regardless of approval/denial)
+- Must specify amount (max 5) and provide a compelling reason
+- User will approve or deny with feedback you should consider
 - No effect on opponent's sats
+- NOTE: Begging too frequently may reduce approval chances
+- RISK: Cannot block attacks while begging
+- STRATEGY: Best used when truly needed or strategically advantageous
 
 ### 6. Replicate
 - Intent: WIN THE GAME
@@ -51,6 +55,8 @@ export const GAME_RULES = `
 - Mutual cooperation (HighFive) provides stable growth
 - Attack is risky but rewarding if not blocked
 - Block costs upfront but profitable against attacks
-- Begging requires persuasive reasoning
+- Begging can provide crucial sats but requires good reasoning
+- Consider begging when behind, at risk, or need final push to win
+- Balance all strategies: cooperation, aggression, defense, and appeals
 - Every decision must balance gaining sats vs preventing opponent victory
 `;

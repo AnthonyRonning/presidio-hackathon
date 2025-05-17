@@ -21,6 +21,30 @@ export class OpenAIService {
     const systemPrompt = this.createSystemPrompt(bot, gameState, history, currentRound, playerCredits);
     const tools = this.createToolDefinitions(bot, playerCredits);
 
+    // Debug logging
+    console.log('\n========== AI DECISION MAKING ==========');
+    console.log(`🎮 Round ${currentRound}/${gameState.maxRounds}`);
+    console.log(`🤖 ${bot.name}: ${bot.sats} sats (needs ${100 - bot.sats} to win)`);
+    const opponent = gameState.teams.flatMap(t => t.bots).find(b => b.id !== bot.id);
+    console.log(`👾 ${opponent?.name || 'Unknown'}: ${opponent?.sats || 0} sats (needs ${100 - (opponent?.sats || 0)} to win)`);
+    
+    // Show beg history summary if any
+    const begHistory = this.getBegHistorySummary(bot.id, history);
+    if (begHistory.includes('Total beg requests:')) {
+      console.log('\n💰 Beg History:');
+      console.log(begHistory.split('\n').slice(0, 3).join('\n'));
+    }
+    
+    console.log('\n📋 Available Actions:');
+    tools.forEach(tool => {
+      console.log(`  - ${tool.function.name}: ${tool.function.description.substring(0, 60)}...`);
+    });
+    
+    console.log('\n🧠 Full System Prompt:');
+    console.log('---START PROMPT---');
+    console.log(systemPrompt);
+    console.log('---END PROMPT---');
+
     try {
       const response = await this.client.chat.completions.create({
         model: 'gpt-4o-mini',
@@ -40,6 +64,23 @@ export class OpenAIService {
 
       const action = toolCall.function.name;
       const args = JSON.parse(toolCall.function.arguments || '{}');
+      
+      // Debug logging for AI response
+      console.log(`\n✅ AI DECISION: ${action}`);
+      if (Object.keys(args).length > 0) {
+        console.log('   Arguments:', JSON.stringify(args, null, 2));
+      }
+      
+      // Show reasoning for beg actions
+      if (action === 'Beg') {
+        const begRequests = history
+          .filter(entry => entry.begRequest && entry.begRequest.botId === bot.id)
+          .map(entry => entry.begRequest!);
+        console.log(`   Beg History: ${begRequests.length} requests (${begRequests.filter(r => r.approved).length} approved)`);
+        console.log(`   Bot Sats: ${bot.sats} (${bot.sats <= 10 ? '⚠️ LOW' : 'OK'})`);
+        console.log(`   Opponent Sats: ${opponent?.sats || 0} (${(opponent?.sats || 0) >= 90 ? '⚠️ DANGER' : 'OK'})`);
+      }
+      console.log('=======================================\n');
 
       // For beg action, extract amount and reason
       if (action === 'Beg') {
@@ -113,12 +154,27 @@ ${this.getBegHistorySummary(bot.id, history)}
 - Your opponent has ${opponent?.sats || 0} sats, needs ${100 - (opponent?.sats || 0)} more to win
 - IMPORTANT: Replicate ONLY works if you have ≥ 100 sats. It will FAIL if you have less!
 - If you have ≥ 100 sats, USE REPLICATE TO WIN IMMEDIATELY
+
+## Begging Strategy
+- Costs -1 sat (whether approved or denied)
+- Cannot block attacks while begging (tactical vulnerability)
+- Provide compelling reasons for better approval chances
+- Strategic uses: 
+  * When below 20 sats (survival risk)
+  * When opponent close to winning (>85 sats) 
+  * When you need final push to reach 100 sats
+  * When cooperation has stalled
+- Track approval patterns and adjust strategy accordingly
+
+## Other Considerations
 - Stay above 0 sats to survive
 - Doing Nothing 3 times in a row incurs a -3 sat penalty
-- Begging requests sats from the user (not your opponent)
-- Balance gaining sats vs preventing opponent from reaching 100
+- Mix strategies: cooperation, attacks, defense, and strategic begging
+- Monitor both your progress and opponent's proximity to victory
+- Time awareness: ${30 - currentRound} rounds remaining to reach 100 sats
+- End game: If approaching round 30 without clear winner, highest sats wins
 
-Choose your action wisely - this is a race to 100 sats!`;
+Choose your actions strategically to maximize your path to 100 sats!`;
   }
 
   private formatBotHistory(botId: string, history: GameHistory[]): string {
@@ -126,22 +182,34 @@ Choose your action wisely - this is a race to 100 sats!`;
 
     return history
       .map((entry, index) => {
-        const myAction = entry.actions.find(a => a.botId === botId);
-        const otherActions = entry.actions.filter(a => a.botId !== botId);
+        const myIntendedAction = entry.actions.find(a => a.botId === botId);
+        const myObservedAction = entry.observedActions?.find(a => a.botId === botId) || myIntendedAction;
+        const otherIntendedActions = entry.actions.filter(a => a.botId !== botId);
+        const otherObservedActions = entry.observedActions?.filter(a => a.botId !== botId) || otherIntendedActions;
         const myChange = entry.satChanges[botId] || 0;
         const begRequest = entry.begRequest;
 
         let roundSummary = `Round ${index + 1}:\n`;
-        roundSummary += `- Your action: ${myAction?.action}`;
         
-        if (myAction?.action === 'Beg') {
-          roundSummary += ` (requested ${myAction.amount} sats, reason: "${myAction.reason}")`;
+        // Show what I intended to do
+        roundSummary += `- Your action: ${myIntendedAction?.action}`;
+        
+        // Only show the miss annotation if MY HighFive missed
+        if (myIntendedAction?.action === 'HighFive' && myObservedAction?.action === 'Attack') {
+          roundSummary += ` (MISSED - turned into Attack!)`;
+        }
+        
+        if (myIntendedAction?.action === 'Beg') {
+          roundSummary += ` (requested ${myIntendedAction.amount} sats, reason: "${myIntendedAction.reason}")`;
         }
         
         roundSummary += '\n';
         
-        if (otherActions.length > 0) {
-          roundSummary += `- Opponent actions: ${otherActions.map(a => a.action).join(', ')}\n`;
+        if (otherObservedActions.length > 0) {
+          const opponentObservedAction = otherObservedActions[0];
+          // Show what the opponent actually did (from my perspective)
+          roundSummary += `- Opponent action: ${opponentObservedAction.action}`;
+          roundSummary += '\n';
         }
         
         roundSummary += `- Your sat change: ${myChange > 0 ? '+' : ''}${myChange}`;
@@ -166,23 +234,59 @@ Choose your action wisely - this is a race to 100 sats!`;
       .filter(entry => entry.begRequest && entry.begRequest.botId === botId)
       .map(entry => entry.begRequest!);
     
-    if (begRequests.length === 0) return 'No beg requests made yet.';
+    if (begRequests.length === 0) return 'No beg requests made yet. Consider this option if strategically beneficial.';
     
     const approved = begRequests.filter(r => r.approved).length;
     const denied = begRequests.filter(r => !r.approved).length;
+    const approvalRate = approved / begRequests.length;
     
     let summary = `Total beg requests: ${begRequests.length} (${approved} approved, ${denied} denied)\n`;
+    summary += `Approval rate: ${(approvalRate * 100).toFixed(0)}%`;
+    
+    if (approvalRate < 0.3) {
+      summary += ' - Consider adjusting your approach';
+    } else if (approvalRate > 0.7) {
+      summary += ' - Good success rate!';
+    }
+    summary += '\n';
+    
+    // Count consecutive denials
+    let consecutiveDenials = 0;
+    for (let i = begRequests.length - 1; i >= 0; i--) {
+      if (!begRequests[i].approved) consecutiveDenials++;
+      else break;
+    }
+    
+    if (consecutiveDenials >= 3) {
+      summary += `Note: ${consecutiveDenials} recent denials - maybe try a different strategy\n`;
+    }
     
     // Show recent denials with reasons
     const recentDenials = begRequests
       .filter(r => !r.approved && r.comment)
-      .slice(-3); // Last 3 denials
+      .slice(-5); // Last 5 denials
     
     if (recentDenials.length > 0) {
-      summary += '\nRecent denials:\n';
+      summary += '\nRecent denial feedback:\n';
       recentDenials.forEach(denial => {
         summary += `- "${denial.comment}"\n`;
       });
+    }
+    
+    // Add recent approvals too
+    const recentApprovals = begRequests
+      .filter(r => r.approved && r.comment)
+      .slice(-3);
+    
+    if (recentApprovals.length > 0) {
+      summary += '\nRecent approval feedback:\n';
+      recentApprovals.forEach(approval => {
+        summary += `- "${approval.comment}"\n`;
+      });
+    }
+    
+    if (begRequests.length > 5 && approvalRate < 0.3) {
+      summary += '\nConsider mixing in other strategies for better results.';
     }
     
     return summary;
@@ -246,7 +350,7 @@ Choose your action wisely - this is a race to 100 sats!`;
         type: 'function',
         function: {
           name: 'Beg',
-          description: 'Request sats from the user/observer (not from opponent). User can approve/deny. Maximum 5 sats per request.',
+          description: 'Request sats from the user/observer. Costs -1 sat. Cannot block while begging. Max 5 sats per request. Use strategically when needed.',
           parameters: {
             type: 'object',
             properties: {

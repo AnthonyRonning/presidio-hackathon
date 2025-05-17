@@ -145,6 +145,7 @@ Below are the six main actions and how they interact. Where relevant, the combin
 ## 3.5 Beg
 
 * **Intent**: Request sats from the observer/user (NOT from the other agent).
+* **Cost**: Begging costs a flat **-1 sat** every time you use it (whether your request is approved or declined).
 * **Resolution Rules**:
 
   * When you Beg, you are **exclusively begging to the observer/user** who is watching the game.
@@ -153,11 +154,11 @@ Below are the six main actions and how they interact. Where relevant, the combin
     * **Decline** the beg request **with a reason**
     * Both the decision and reason will be communicated to the LLM agent
   * By default, **Beg** has no effect on the other agent's sats. Only the observer/user can grant sats from outside the game.
-  * If the user accepts, your sats increase accordingly (these sats come from outside the game, not from the other agent).
-  * If the user declines, you gain nothing.
+  * If the user accepts, your sats increase accordingly (these sats come from outside the game, not from the other agent) minus the -1 cost you already paid.
+  * If the user declines, you gain nothing and still lose the -1 sat cost.
   * You must **specify the amount** you are requesting AND **provide a reason** for your beg request (e.g., "I need 8 sats to survive the next round because I predict an attack").
-  * **Side effect**: Using Beg repeatedly might trigger mistrust or might be penalized in certain designs; this is left to your scenario or a “reputation system.” (Optional design: each consecutive Beg might cost -1 sat to represent the time spent begging.)
-> **Key Insight**: Beg is a strategic action with a risk-reward tradeoff. Agents must balance the amount requested - too high may lead to rejection, too low may waste a turn if attacked. This creates a meta-game where agents must craft persuasive messages with reasonable requests based on their situation.
+  * **Side effect**: Using Beg repeatedly might trigger mistrust from the user, who may be less likely to approve frequent requests.
+> **Key Insight**: Beg is a strategic action with a risk-reward tradeoff. Agents must balance the amount requested - too high may lead to rejection, too low may waste a turn if attacked. The -1 sat cost makes begging risky, ensuring agents don't abuse this mechanic. This creates a meta-game where agents must craft persuasive messages with reasonable requests based on their situation.
 
 ## 3.6 Replicate
 
@@ -205,12 +206,12 @@ To clarify how actions resolve simultaneously, here are example scenarios for a 
 
 5. **A: Beg, B: Do Nothing**
 
-   * A begs for a specific amount with a reason (e.g., "Please give me 5 sats to survive an expected attack").
+   * A pays -1 sat to beg for a specific amount with a reason (e.g., "Please give me 5 sats to survive an expected attack").
    * B does nothing (this action doesn't affect the begging).
    * The user reviews A's request and may accept/decline with reason.
-   * If accepted: A gains the granted amount, B is unaffected.
-   * If declined: A gains 0, B is unaffected.
-   * New totals: A = A\_old + (granted\_amount or 0), B = B\_old.
+   * If accepted: A gains the granted amount minus the 1 sat cost.
+   * If declined: A loses 1 sat for the beg attempt.
+   * New totals: A = A\_old - 1 + (granted\_amount or 0), B = B\_old.
 
 6. **A: Replicate, B: Attack**
 
@@ -281,9 +282,9 @@ To clarify how actions resolve simultaneously, here are example scenarios for a 
 
    * Introduce a small chance (5–10%) that an intended action is mis-executed (e.g., you attempt a Block but end up Doing Nothing). This fosters the need for more forgiving strategies like in *The Evolution of Trust*.
 
-2. **Cost for Begging**
+2. **Begging Frequency**
 
-   * Impose a small cost (-1 sat) each time you Beg (to represent time and humility cost). Or track a “Begging Count” that influences how likely the environment or another agent is to help.
+** * Track a "Begging Count" that influences how likely the user is to approve requests. Frequent begging may reduce approval rates.
 
 3. **Replicate Scaling**
 
