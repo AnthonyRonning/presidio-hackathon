@@ -55,7 +55,7 @@ const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begS
         // Use mercy image if health is below 50%
         return bot.sats < 50 ? `/player${playerNumber}-mercy.png` : `/player${playerNumber}-beg.png`;
       case 'HighFive':
-        return `/player${playerNumber}-neutral.png`; // or create a high-five image
+        return `/player${playerNumber}-highfive.png`;
       default:
         return `/player${playerNumber}-neutral.png`;
     }
