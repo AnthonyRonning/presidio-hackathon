@@ -6,6 +6,7 @@ export interface Bot {
   sats: number;
   isAlive: boolean;
   teamId: string;
+  consecutiveDoNothing: number;
 }
 
 export interface Team {

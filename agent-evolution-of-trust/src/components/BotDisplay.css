@@ -116,6 +116,24 @@
   color: #f87171;
 }
 
+.beg-status {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.beg-status.approved {
+  color: #4ade80;
+}
+
+.beg-status.rejected {
+  color: #f87171;
+}
+
+.beg-status.pending {
+  color: #fbbf24;
+}
+
 @media (max-width: 768px) {
   .bot-display {
     min-width: 200px;

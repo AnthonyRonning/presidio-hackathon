@@ -25,8 +25,25 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
   const lastRound = gameState.history[gameState.history.length - 1];
   const leftBotAction = lastRound?.actions.find(a => a.botId === botLeft?.id);
   const rightBotAction = lastRound?.actions.find(a => a.botId === botRight?.id);
-  const leftBotSatChange = lastRound?.satChanges[botLeft?.id || ''];
-  const rightBotSatChange = lastRound?.satChanges[botRight?.id || ''];
+  let leftBotSatChange = lastRound?.satChanges[botLeft?.id || ''];
+  let rightBotSatChange = lastRound?.satChanges[botRight?.id || ''];
+  
+  // Adjust sat changes for approved beg requests
+  if (lastRound?.begRequests) {
+    const leftBegRequest = lastRound.begRequests.find(req => req.botId === botLeft?.id && req.status === 'approved');
+    const rightBegRequest = lastRound.begRequests.find(req => req.botId === botRight?.id && req.status === 'approved');
+    
+    if (leftBegRequest && leftBotSatChange !== undefined) {
+      leftBotSatChange += leftBegRequest.amount;
+    }
+    if (rightBegRequest && rightBotSatChange !== undefined) {
+      rightBotSatChange += rightBegRequest.amount;
+    }
+  }
+  
+  // Get beg status for display
+  const leftBegStatus = lastRound?.begRequests?.find(req => req.botId === botLeft?.id)?.status;
+  const rightBegStatus = lastRound?.begRequests?.find(req => req.botId === botRight?.id)?.status;
 
   return (
     <div className="game-board">
@@ -45,6 +62,7 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
               side="left" 
               lastAction={leftBotAction}
               satChange={leftBotSatChange}
+              begStatus={leftBegStatus}
             />
           )}
         </div>
@@ -60,6 +78,7 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
               side="right" 
               lastAction={rightBotAction}
               satChange={rightBotSatChange}
+              begStatus={rightBegStatus}
             />
           )}
         </div>

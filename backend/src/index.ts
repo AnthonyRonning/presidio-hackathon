@@ -120,6 +120,7 @@ app.post('/api/game/reset', (req, res) => {
   res.json(newGame);
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://0.0.0.0:${PORT}`);
+const port = typeof PORT === 'string' ? parseInt(PORT, 10) : PORT;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${port}`);
 });
