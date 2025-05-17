@@ -125,13 +125,17 @@ export class GameManager {
         }
       }
     });
+    
+    // Game win status is already set during action processing if replication was successful
+    // No need to check again here
 
     // Add round to history
     game.history.push(roundResult);
 
-    // Check end conditions
-    if (game.currentRound >= game.maxRounds) {
+    // Check end conditions only if game isn't already over
+    if (!game.isGameOver && game.currentRound >= game.maxRounds) {
       game.isGameOver = true;
+      game.winCondition = 'maxRounds';
       // Determine winner by highest sats
       const aliveTeams = game.teams.filter(team => 
         team.bots.some(bot => bot.isAlive)
@@ -221,6 +225,21 @@ export class GameManager {
           amount: gameAction.amount || 5,
           reason: gameAction.reason || 'I need assistance',
         });
+      }
+      
+      // Handle Replicate action - this is a win condition!
+      if (intendedAction && intendedAction.action === 'Replicate') {
+        const replicatingBot = this.findBot(game, intendedAction.botId);
+        if (replicatingBot && replicatingBot.sats >= 100) {
+          // Bot has enough sats to replicate - they win!
+          satChanges[intendedAction.botId] -= 50; // Cost of replication
+          game.isGameOver = true;
+          game.winCondition = 'replication';
+          const winnerTeam = game.teams.find(team => 
+            team.bots.some(bot => bot.id === intendedAction.botId)
+          );
+          game.winner = winnerTeam?.name;
+        }
       }
     });
 

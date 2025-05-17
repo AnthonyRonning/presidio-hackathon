@@ -58,6 +58,7 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
         maxRounds={gameState.maxRounds} 
         gameStatus={gameState.isGameOver ? 'ended' : 'active'} 
         winner={gameState.winner}
+        winCondition={gameState.winCondition}
       />
       
       <div className="game-field">

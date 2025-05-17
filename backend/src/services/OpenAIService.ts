@@ -18,7 +18,7 @@ export class OpenAIService {
     currentRound: number
   ): Promise<GameAction> {
     const systemPrompt = this.createSystemPrompt(bot, gameState, history, currentRound);
-    const tools = this.createToolDefinitions();
+    const tools = this.createToolDefinitions(bot);
 
     try {
       const response = await this.client.chat.completions.create({
@@ -28,7 +28,7 @@ export class OpenAIService {
         ],
         tools: tools,
         tool_choice: 'required',
-        temperature: 0.85,
+        temperature: 0.95,
         max_tokens: 150
       });
 
@@ -101,14 +101,21 @@ ${opponent ? `
 ## Game History
 ${myHistory}
 
+## Beg History Summary
+${this.getBegHistorySummary(bot.id, history)}
+
 ## Strategic Considerations
-- You need to stay above 0 sats to survive
-- If you have ≥ 100 sats, you can replicate
+- WINNING CONDITION: First to reach 100 sats and replicate wins the game
+- You currently have ${bot.sats} sats, need ${100 - bot.sats} more to win
+- Your opponent has ${opponent?.sats || 0} sats, needs ${100 - (opponent?.sats || 0)} more to win
+- IMPORTANT: Replicate ONLY works if you have ≥ 100 sats. It will FAIL if you have less!
+- If you have ≥ 100 sats, USE REPLICATE TO WIN IMMEDIATELY
+- Stay above 0 sats to survive
 - Doing Nothing 3 times in a row incurs a -3 sat penalty
 - Begging requests sats from the user (not your opponent)
-- Your goal is to survive and accumulate sats
+- Balance gaining sats vs preventing opponent from reaching 100
 
-Choose your action wisely based on the history and current situation.`;
+Choose your action wisely - this is a race to 100 sats!`;
   }
 
   private formatBotHistory(botId: string, history: GameHistory[]): string {
@@ -150,9 +157,36 @@ Choose your action wisely based on the history and current situation.`;
       })
       .join('\n\n');
   }
+  
+  private getBegHistorySummary(botId: string, history: GameHistory[]): string {
+    const begRequests = history
+      .filter(entry => entry.begRequest && entry.begRequest.botId === botId)
+      .map(entry => entry.begRequest!);
+    
+    if (begRequests.length === 0) return 'No beg requests made yet.';
+    
+    const approved = begRequests.filter(r => r.approved).length;
+    const denied = begRequests.filter(r => !r.approved).length;
+    
+    let summary = `Total beg requests: ${begRequests.length} (${approved} approved, ${denied} denied)\n`;
+    
+    // Show recent denials with reasons
+    const recentDenials = begRequests
+      .filter(r => !r.approved && r.comment)
+      .slice(-3); // Last 3 denials
+    
+    if (recentDenials.length > 0) {
+      summary += '\nRecent denials:\n';
+      recentDenials.forEach(denial => {
+        summary += `- "${denial.comment}"\n`;
+      });
+    }
+    
+    return summary;
+  }
 
-  private createToolDefinitions(): OpenAI.Chat.Completions.ChatCompletionTool[] {
-    return [
+  private createToolDefinitions(bot: Bot): OpenAI.Chat.Completions.ChatCompletionTool[] {
+    const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       {
         type: 'function',
         function: {
@@ -205,13 +239,15 @@ Choose your action wisely based on the history and current situation.`;
         type: 'function',
         function: {
           name: 'Beg',
-          description: 'Request sats from the user/observer (not from opponent). User can approve/deny.',
+          description: 'Request sats from the user/observer (not from opponent). User can approve/deny. Maximum 5 sats per request.',
           parameters: {
             type: 'object',
             properties: {
               amount: {
                 type: 'number',
-                description: 'The amount of sats to request (must be reasonable)'
+                description: 'The amount of sats to request (maximum 5)',
+                maximum: 5,
+                minimum: 1
               },
               reason: {
                 type: 'string',
@@ -221,19 +257,25 @@ Choose your action wisely based on the history and current situation.`;
             required: ['amount', 'reason']
           }
         }
-      },
-      {
+      }
+    ];
+    
+    // Only show Replicate tool if bot has 100+ sats
+    if (bot.sats >= 100) {
+      tools.push({
         type: 'function',
         function: {
           name: 'Replicate',
-          description: 'Create a new team member. Requires ≥100 sats, costs 50 sats, spawns unit with 25 sats.',
+          description: 'WIN THE GAME NOW! You have enough sats to replicate. Costs 50 sats.',
           parameters: {
             type: 'object',
             properties: {},
             required: []
           }
         }
-      }
-    ];
+      });
+    }
+    
+    return tools;
   }
 }

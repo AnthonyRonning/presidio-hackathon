@@ -51,6 +51,7 @@ export interface GameState {
   maxRounds: number;
   isGameOver: boolean;
   winner?: string;
+  winCondition?: 'replication' | 'maxRounds';
   history: RoundResult[];
   pendingBegRequests: {
     botId: string;

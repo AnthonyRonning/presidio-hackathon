@@ -3,7 +3,8 @@ export const GAME_RULES = `
 
 ## Overview
 - Each agent starts with 50 sats (currency)
-- Goal: Stay alive (>0 sats) and accumulate wealth
+- Goal: First to replicate wins (requires 100 sats)
+- Stay alive (>0 sats) to keep competing
 - Game proceeds in rounds with simultaneous action selection
 
 ## Available Actions
@@ -40,16 +41,16 @@ export const GAME_RULES = `
 - No effect on opponent's sats
 
 ### 6. Replicate
-- Intent: Create new team member
+- Intent: WIN THE GAME
 - Requirements: Must have ≥100 sats
 - Cost: -50 sats
-- Creates new unit with 25 sats
+- Effect: INSTANT VICTORY - Game ends immediately
 
 ## Key Insights
+- Race to 100 sats: First to replicate wins
 - Mutual cooperation (HighFive) provides stable growth
 - Attack is risky but rewarding if not blocked
 - Block costs upfront but profitable against attacks
 - Begging requires persuasive reasoning
-- Replication enables team strategies
-- Survival requires maintaining sats > 0
+- Every decision must balance gaining sats vs preventing opponent victory
 `;

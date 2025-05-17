@@ -11,9 +11,9 @@ Below is a comprehensive “Game Bible” for your hackathon project, combining 
 
 2. **Goal**
 
-   * Primary: **Stay alive** (an agent “dies” if it drops to 0 sats or below).
-   * Secondary: **Accumulate as many sats as possible** to outlast or outgrow your opponent(s).
-   * Team/Replication Aspect: If an agent replicates, it can form a mini “team” that acts jointly. The overarching survival goal is that at least one member of your “team” remains alive.
+   * Primary: **First to replicate wins** (requires accumulating 100 sats to replicate).
+   * Secondary: **Stay alive** (an agent dies if it drops to 0 sats or below).
+   * Race to 100: The game is a race - the first agent to successfully replicate wins immediately.
 
 3. **High-Level Flow**
 
@@ -21,7 +21,7 @@ Below is a comprehensive “Game Bible” for your hackathon project, combining 
      **High Five**, **Block**, **Attack**, **Do Nothing**, **Beg**, or **Replicate** (if conditions are met).
    * Actions are revealed simultaneously and resolved according to the rules described below.
    * Sats are gained or lost based on the outcome. Agents drop out if their sats ≤ 0.
-   * Continue until only one “side” remains or until a predetermined number of rounds are over.
+   * The game ends immediately when an agent successfully replicates (reaches 100 sats and uses the Replicate action).
 
 4. **Design Philosophy**
 
@@ -166,12 +166,11 @@ Below are the six main actions and how they interact. Where relevant, the combin
 * **Cost**: **-50 sats** to replicate (or any cost you choose).
 * **Outcome**:
 
-  * You spawn a new agent (“Unit B”) on your team.
-  * That new agent starts with **25 sats** (a fraction of your cost is allocated to it).
-  * Starting next round, each unit on your team chooses an action.
-  * If either unit’s sats drop to 0 or below, that particular unit is removed, but the other can continue if it remains above 0.
+  * **INSTANT VICTORY** - The game ends immediately.
+  * You have successfully replicated and won the game.
+  * No further rounds are played.
 
-> **Key Insight**: Replication is a long-term investment. You sacrifice some sats now to gain an extra action every round—potentially doubling your strategic reach (one unit could Attack while the other Blocks, etc.). However, it exposes you to risk if your sats drop too low after replication.
+> **Key Insight**: Replication is the win condition. The race to 100 sats creates urgency and tension. Every decision must balance immediate gains against the risk of helping your opponent reach the goal first.
 
 ---
 
@@ -229,20 +228,18 @@ To clarify how actions resolve simultaneously, here are example scenarios for a 
 
 # 5. Winning Conditions & Elimination
 
-1. **Elimination**
+1. **Victory - First to Replicate**
 
-   * If an agent’s sats drop to 0 or below, that agent “dies” and is removed from the game.
-   * If that agent was part of a replicated team, only that unit is removed. Other units on that team remain if they have > 0 sats.
+   * The first agent to reach 100 sats and successfully use the Replicate action wins immediately.
+   * The game ends as soon as Replicate is executed successfully.
+   * No additional rounds are played after replication.
 
-2. **Victory**
+2. **Elimination**
 
-   * Last Player or Team Standing: If at any point all other players or teams are eliminated, the remaining team wins.
-   * (Optional) **Score Leader at Round Limit**: If a max round limit is reached (e.g., 30 rounds), the agent or team with the highest combined sats total wins.
-   * (Optional) **Tie-breakers**: If there’s a tie in sats, you can either declare a tie or continue sudden-death rounds.
+   * If an agent's sats drop to 0 or below, that agent "dies" and is removed from the game.
+   * If both agents are eliminated, the game is a draw.
+   * If one agent is eliminated, the surviving agent can continue accumulating sats to replicate.
 
-3. **Goal: “Always have at least one of you alive.”**
-
-   * If your side can replicate strategically and keep at least one unit above zero, you prolong your presence in the game. This fosters a sense of “survival + expansion” typical of evolutionary game theory.
 
 ---
 
