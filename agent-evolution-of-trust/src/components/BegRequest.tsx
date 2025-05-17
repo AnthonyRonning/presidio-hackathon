@@ -7,9 +7,10 @@ interface BegRequestProps {
   reason: string;
   onAccept: (comment: string) => void;
   onDecline: (comment: string) => void;
+  playerCredits?: number;
 }
 
-const BegRequest = ({ amount, reason, onAccept, onDecline }: BegRequestProps) => {
+const BegRequest = ({ amount, reason, onAccept, onDecline, playerCredits }: BegRequestProps) => {
   const [comment, setComment] = useState('');
 
   const handleAccept = () => {
@@ -21,6 +22,8 @@ const BegRequest = ({ amount, reason, onAccept, onDecline }: BegRequestProps) =>
     onDecline(comment);
     setComment('');
   };
+
+  const hasEnoughCredits = playerCredits === undefined || playerCredits >= amount;
 
   return (
     <div className="beg-request">
@@ -38,11 +41,18 @@ const BegRequest = ({ amount, reason, onAccept, onDecline }: BegRequestProps) =>
         />
       </div>
       
+      {!hasEnoughCredits && (
+        <div className="credit-warning">
+          Insufficient credits (have {playerCredits}, need {amount})
+        </div>
+      )}
+      
       <div className="beg-request-actions">
         <button
           className="beg-button accept"
           onClick={handleAccept}
           title="Accept"
+          disabled={!hasEnoughCredits}
         >
           <Check size={16} />
         </button>

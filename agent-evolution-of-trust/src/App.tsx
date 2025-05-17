@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './index.css';
 import type { GameState } from './types/game';
 import GameBoard from './components/GameBoard';
+import PaymentGate from './components/PaymentGate';
 import { api } from './utils/api';
 
 function App() {
@@ -9,9 +10,34 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+  const [playerCredits, setPlayerCredits] = useState(0);
+
+  const checkPaymentStatus = useCallback(async () => {
+    try {
+      const status = await api.checkInvoiceStatus();
+      if (status.isPaid) {
+        setPaymentComplete(true);
+        setPlayerCredits(status.playerCredits);
+        return true;
+      }
+    } catch {
+      // No invoice yet, that's fine
+      console.log('No active invoice');
+    }
+    return false;
+  }, []);
 
   useEffect(() => {
-    loadGame();
+    const checkAndLoadGame = async () => {
+      const isPaid = await checkPaymentStatus();
+      if (isPaid) {
+        await loadGame();
+      }
+    };
+    
+    checkAndLoadGame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadGame = async () => {
@@ -44,8 +70,9 @@ function App() {
 
   const handleBegResponse = async (botId: string, approved: boolean, comment: string) => {
     try {
-      const game = await api.respondToBeg(botId, approved, comment);
-      setGameState(game);
+      const response = await api.respondToBeg(botId, approved, comment);
+      setGameState(response.game);
+      setPlayerCredits(response.playerCredits);
       setError(null);
     } catch (err) {
       setError('Failed to respond to beg request');
@@ -66,6 +93,18 @@ function App() {
       setIsActionLoading(false);
     }
   };
+
+  const handlePaymentComplete = async () => {
+    const status = await api.checkInvoiceStatus();
+    setPaymentComplete(true);
+    setPlayerCredits(status.playerCredits);
+    await loadGame();
+  };
+
+  // Show payment gate if not paid
+  if (!paymentComplete) {
+    return <PaymentGate onPaymentComplete={handlePaymentComplete} />;
+  }
 
   if (loading) {
     return <div className="app-loading">Loading...</div>;
@@ -92,6 +131,7 @@ function App() {
         onBegResponse={handleBegResponse}
         onReset={handleReset}
         isLoading={isActionLoading}
+        playerCredits={playerCredits}
       />
     </div>
   );

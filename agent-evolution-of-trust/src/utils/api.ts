@@ -2,6 +2,23 @@ import type { GameState } from '../types/game';
 
 const API_URL = 'http://localhost:3001/api';
 
+export interface InvoiceResponse {
+  gameId: string;
+  invoice: string;
+  amountSats: number;
+  memo: string;
+}
+
+export interface InvoiceStatus {
+  isPaid: boolean;
+  playerCredits: number;
+}
+
+export interface BegResponse {
+  game: GameState;
+  playerCredits: number;
+}
+
 export const api = {
   async getGame(): Promise<GameState> {
     const response = await fetch(`${API_URL}/game`, {
@@ -31,7 +48,7 @@ export const api = {
     return response.json();
   },
 
-  async respondToBeg(botId: string, approved: boolean, comment: string): Promise<GameState> {
+  async respondToBeg(botId: string, approved: boolean, comment: string): Promise<BegResponse> {
     const response = await fetch(`${API_URL}/game/beg-response`, {
       method: 'POST',
       credentials: 'include',
@@ -59,6 +76,34 @@ export const api = {
     
     if (!response.ok) {
       throw new Error('Failed to reset game');
+    }
+    
+    return response.json();
+  },
+
+  async createInvoice(): Promise<InvoiceResponse> {
+    const response = await fetch(`${API_URL}/game/create-invoice`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create invoice');
+    }
+    
+    return response.json();
+  },
+
+  async checkInvoiceStatus(): Promise<InvoiceStatus> {
+    const response = await fetch(`${API_URL}/game/invoice-status`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to check invoice status');
     }
     
     return response.json();

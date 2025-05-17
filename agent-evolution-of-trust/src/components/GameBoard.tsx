@@ -1,7 +1,6 @@
 import type { GameState } from '../types/game';
 import BotDisplay from './BotDisplay';
 import GameControls from './GameControls';
-import GameHeader from './GameHeader';
 import './GameBoard.css';
 
 interface GameBoardProps {
@@ -10,9 +9,10 @@ interface GameBoardProps {
   onBegResponse: (botId: string, approved: boolean, comment: string) => void;
   onReset: () => void;
   isLoading?: boolean;
+  playerCredits?: number;
 }
 
-const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }: GameBoardProps) => {
+const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading, playerCredits }: GameBoardProps) => {
   // Get all bots from all teams
   const allBots = gameState.teams.flatMap(team => team.bots);
   const aliveBots = allBots.filter(bot => bot.isAlive);
@@ -71,6 +71,11 @@ const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }
             First to 100 sats wins!
           </div>
         )}
+        {playerCredits !== undefined && (
+          <div className="player-credits">
+            Your Credits: {playerCredits} sats
+          </div>
+        )}
       </div>
       
       <div className="game-field">
@@ -86,6 +91,7 @@ const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }
               pendingBegRequest={leftPendingBeg}
               onBegResponse={(approved, comment) => onBegResponse(botLeft.id, approved, comment)}
               playerNumber={1}
+              playerCredits={playerCredits}
             />
           )}
         </div>
@@ -106,6 +112,7 @@ const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }
               pendingBegRequest={rightPendingBeg}
               onBegResponse={(approved, comment) => onBegResponse(botRight.id, approved, comment)}
               playerNumber={2}
+              playerCredits={playerCredits}
             />
           )}
         </div>

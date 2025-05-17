@@ -119,6 +119,17 @@
   animation: pulse 1s ease-in-out infinite;
 }
 
+.player-credits {
+  font-size: 1rem;
+  color: #22c55e;
+  font-weight: 600;
+  margin-top: 10px;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 5px 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
 .game-controls-overlay {
   position: fixed;
   bottom: 2rem;

@@ -14,6 +14,7 @@ interface BotDisplayProps {
   pendingBegRequest?: BegRequestType;
   onBegResponse?: (approved: boolean, comment: string) => void;
   playerNumber?: 1 | 2;
+  playerCredits?: number;
 }
 
 const getActionIcon = (action: string, begStatus?: string) => {
@@ -35,7 +36,7 @@ const getActionIcon = (action: string, begStatus?: string) => {
   }
 };
 
-const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus, pendingBegRequest, onBegResponse, playerNumber = 1 }: BotDisplayProps) => {
+const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus, pendingBegRequest, onBegResponse, playerNumber = 1, playerCredits }: BotDisplayProps) => {
   const MAX_SATS = 100;
   const healthPercentage = (bot.sats / MAX_SATS) * 100;
   
@@ -104,6 +105,7 @@ const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begS
             reason={pendingBegRequest.reason}
             onAccept={(comment) => onBegResponse(true, comment)}
             onDecline={(comment) => onBegResponse(false, comment)}
+            playerCredits={playerCredits}
           />
         )}
       </div>

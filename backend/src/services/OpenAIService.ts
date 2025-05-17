@@ -15,10 +15,11 @@ export class OpenAIService {
     bot: Bot,
     gameState: GameState,
     history: GameHistory[],
-    currentRound: number
+    currentRound: number,
+    playerCredits?: number
   ): Promise<GameAction> {
-    const systemPrompt = this.createSystemPrompt(bot, gameState, history, currentRound);
-    const tools = this.createToolDefinitions(bot);
+    const systemPrompt = this.createSystemPrompt(bot, gameState, history, currentRound, playerCredits);
+    const tools = this.createToolDefinitions(bot, playerCredits);
 
     try {
       const response = await this.client.chat.completions.create({
@@ -69,7 +70,8 @@ export class OpenAIService {
     bot: Bot,
     gameState: GameState,
     history: GameHistory[],
-    currentRound: number
+    currentRound: number,
+    playerCredits?: number
   ): string {
     const allBots = gameState.teams.flatMap(team => team.bots);
     const opponent = allBots.find(b => b.id !== bot.id);
@@ -97,6 +99,7 @@ ${opponent ? `
 ` : 'No opponent'}
 
 ## Current Round: ${currentRound}/${gameState.maxRounds}
+${playerCredits !== undefined && playerCredits === 0 ? '\n## ⚠️ USER HAS NO MORE CREDITS FOR BEGGING\n' : ''}
 
 ## Game History
 ${myHistory}
@@ -185,7 +188,7 @@ Choose your action wisely - this is a race to 100 sats!`;
     return summary;
   }
 
-  private createToolDefinitions(bot: Bot): OpenAI.Chat.Completions.ChatCompletionTool[] {
+  private createToolDefinitions(bot: Bot, playerCredits?: number): OpenAI.Chat.Completions.ChatCompletionTool[] {
     const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
       {
         type: 'function',
@@ -234,8 +237,12 @@ Choose your action wisely - this is a race to 100 sats!`;
             required: []
           }
         }
-      },
-      {
+      }
+    ];
+
+    // Only include Beg tool if user has credits (or credits are unlimited)
+    if (playerCredits === undefined || playerCredits > 0) {
+      tools.push({
         type: 'function',
         function: {
           name: 'Beg',
@@ -257,8 +264,8 @@ Choose your action wisely - this is a race to 100 sats!`;
             required: ['amount', 'reason']
           }
         }
-      }
-    ];
+      });
+    }
     
     // Only show Replicate tool if bot has 100+ sats
     if (bot.sats >= 100) {
