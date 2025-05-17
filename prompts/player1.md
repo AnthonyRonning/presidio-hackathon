@@ -1,0 +1,5 @@
+Create a humanoid robot in a neutral standing pose, designed in a retro-futuristic, neon art style inspired by Tron and Eve from WALL·E. The robot should have a smooth, polished silhouette with rounded features and segmented panel armor that suggests agility and friendliness. Its limbs are long and slender, with softly angular joints and minimalist contour lines.
+
+The robot’s body is primarily deep black or dark teal, accented with glowing cyan panel edges and linework. The head is rounded and helmet-like, with a glossy black faceplate displaying large, softly glowing cyan eyes—expressive but neutral. Its stance is relaxed and confident: feet shoulder-width apart, arms gently bent at the sides.
+
+Keep the design clean and uncluttered—no weapons or gadgets. The visual style should be flat-vector or cell-shaded, with bright neon edge glow and crisp shapes. Background should be dark or minimal to highlight the robot. This version should appear likable and slightly emotive, like a friendly futuristic scout or helper.
