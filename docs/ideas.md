@@ -34,3 +34,20 @@ agents collecting the loot, bobbie traps cost money but they get more money as a
 audeince can fund an agent
 
 
+# Rules
+
+Goal: always have at least one of you always alive
+
+# Tools
+
+Actions
+- High five (if both high five, + points, if only one, minus points for that one).
+- Block (costs points, gets more points back if it successfully blocks).
+- Attack (hurts other player, gets some of their points, if blocked, hurts them even more).
+- Do nothing (no points lost unless attacked, or three turns in a row where they did nothing so they lose points)
+- beg (optional message) - user decides whether or not they get points
+- kill yourself (lose all points instantly)
+- Replicate available if you have enough points, you get an additional character on your team with two actions per turn now.
+
+potential: buying a shield (costs a lot but now allows them to block)
+potential: revives at full health but it costs 50% more
