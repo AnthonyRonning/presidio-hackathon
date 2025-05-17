@@ -1,8 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import { GameState, Bot, Team, GameAction, RoundResult, ActionType } from '../types';
+import { OpenAIService } from './OpenAIService';
 
 export class GameManager {
   private games: Map<string, GameState> = new Map();
+  private openAIService: OpenAIService;
+
+  constructor() {
+    this.openAIService = new OpenAIService();
+  }
 
   createGame(): GameState {
     const gameId = uuidv4();
@@ -54,7 +60,7 @@ export class GameManager {
     return this.games.get(gameId);
   }
 
-  processNextRound(gameId: string): GameState {
+  async processNextRound(gameId: string): Promise<GameState> {
     const game = this.games.get(gameId);
     if (!game) {
       throw new Error('Game not found');
@@ -86,16 +92,23 @@ export class GameManager {
       return game;
     }
 
-    // For now, let's implement a simple AI strategy
+    // Convert history to GameHistory format for LLM
+    const gameHistory = game.history.map((result, index) => ({
+      ...result,
+      round: index + 1
+    }));
+    
+    // Use OpenAI to select actions for each bot
     const actions: GameAction[] = [];
     
-    // Simple AI: Random actions for now
-    aliveBots.forEach(bot => {
-      const action = this.chooseAction(bot, game);
-      actions.push({
-        botId: bot.id,
-        action: action,
-      });
+    // Process all bots in parallel for better performance
+    const actionPromises = aliveBots.map(bot => 
+      this.openAIService.selectBotAction(bot, game, gameHistory, game.currentRound)
+    );
+    
+    const selectedActions = await Promise.all(actionPromises);
+    selectedActions.forEach(action => {
+      actions.push(action);
     });
 
     // Process actions and calculate results
@@ -112,13 +125,17 @@ export class GameManager {
         }
       }
     });
+    
+    // Game win status is already set during action processing if replication was successful
+    // No need to check again here
 
     // Add round to history
     game.history.push(roundResult);
 
-    // Check end conditions
-    if (game.currentRound >= game.maxRounds) {
+    // Check end conditions only if game isn't already over
+    if (!game.isGameOver && game.currentRound >= game.maxRounds) {
       game.isGameOver = true;
+      game.winCondition = 'maxRounds';
       // Determine winner by highest sats
       const aliveTeams = game.teams.filter(team => 
         team.bots.some(bot => bot.isAlive)
@@ -140,14 +157,7 @@ export class GameManager {
     return game;
   }
 
-  private chooseAction(bot: Bot, game: GameState): ActionType {
-    // Simple AI strategy for now
-    const actions: ActionType[] = 
-      ['HighFive', 'Attack', 'Block', 'DoNothing', 'Beg'];
-    
-    // Random selection for initial implementation
-    return actions[Math.floor(Math.random() * actions.length)];
-  }
+  // Removed chooseAction method - now using OpenAI service
 
   private processActions(actions: GameAction[], game: GameState): RoundResult {
     const satChanges: { [botId: string]: number } = {};
@@ -158,8 +168,30 @@ export class GameManager {
       status: 'pending' | 'approved' | 'rejected';
     }[] = [];
     
+    // Process HighFive misses
+    const processedActions = actions.map(action => {
+      if (action.action === 'HighFive' && Math.random() < 0.15) {
+        // 15% chance to miss - create Attack action for others to see
+        const attackAction: GameAction = {
+          ...action,
+          action: 'Attack'
+        };
+        return {
+          intended: action,  // Bot remembers attempting HighFive
+          observed: attackAction  // Others see Attack
+        };
+      }
+      return {
+        intended: action,
+        observed: action
+      };
+    });
+    
+    // For the actual action resolution, use observed actions
+    const observedActions = processedActions.map(p => p.observed);
+    
     // Initialize all bot changes to 0
-    actions.forEach(action => {
+    observedActions.forEach(action => {
       satChanges[action.botId] = 0;
       
       // Update consecutive DoNothing counter
@@ -177,27 +209,43 @@ export class GameManager {
         }
       }
       
-      // Handle Beg action
-      if (action.action === 'Beg') {
-        // Hardcoded for now, will be replaced with LLM logic later
+      // Handle Beg action (using intended action for beg)
+      const intendedAction = processedActions.find(p => p.observed.botId === action.botId)?.intended;
+      if (intendedAction && intendedAction.action === 'Beg') {
+        const gameAction = intendedAction as GameAction & { amount?: number; reason?: string };
         const begRequest = {
-          botId: action.botId,
-          amount: 5,
-          reason: 'please gimme sats',
+          botId: intendedAction.botId,
+          amount: gameAction.amount || 5,
+          reason: gameAction.reason || 'I need assistance',
           status: 'pending' as const,
         };
         begRequests.push(begRequest);
         game.pendingBegRequests.push({
-          botId: action.botId,
-          amount: 5,
-          reason: 'please gimme sats',
+          botId: intendedAction.botId,
+          amount: gameAction.amount || 5,
+          reason: gameAction.reason || 'I need assistance',
         });
+      }
+      
+      // Handle Replicate action - this is a win condition!
+      if (intendedAction && intendedAction.action === 'Replicate') {
+        const replicatingBot = this.findBot(game, intendedAction.botId);
+        if (replicatingBot && replicatingBot.sats >= 100) {
+          // Bot has enough sats to replicate - they win!
+          satChanges[intendedAction.botId] -= 50; // Cost of replication
+          game.isGameOver = true;
+          game.winCondition = 'replication';
+          const winnerTeam = game.teams.find(team => 
+            team.bots.some(bot => bot.id === intendedAction.botId)
+          );
+          game.winner = winnerTeam?.name;
+        }
       }
     });
 
     // For simplicity, let's handle 2-bot interactions first
-    if (actions.length === 2) {
-      const [action1, action2] = actions;
+    if (observedActions.length === 2) {
+      const [action1, action2] = observedActions;
       
       // High Five resolution
       if (action1.action === 'HighFive' && action2.action === 'HighFive') {
@@ -235,8 +283,10 @@ export class GameManager {
       }
     }
 
+    // Return with intended actions for bot memory and observed actions for display
     return {
-      actions,
+      actions: processedActions.map(p => p.intended),  // Bots remember what they intended
+      observedActions: observedActions,  // What others saw
       satChanges,
       begRequests: begRequests.length > 0 ? begRequests : undefined,
     };
@@ -283,6 +333,17 @@ export class GameManager {
       if (request) {
         request.status = approved ? 'approved' : 'rejected';
       }
+    }
+    
+    // Also add the beg approval/denial to history for LLM awareness
+    if (lastRound) {
+      lastRound.begRequest = {
+        botId: botId,
+        amount: begRequest.amount,
+        reason: begRequest.reason,
+        approved: approved,
+        comment: comment
+      };
     }
 
     // Remove the pending request

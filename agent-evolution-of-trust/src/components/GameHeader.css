@@ -1,6 +1,6 @@
 .game-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
   padding: 1.5rem 2rem;
   background-color: var(--bg-secondary);
@@ -14,6 +14,15 @@
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.game-subtitle {
+  font-size: 1.2rem;
+  color: var(--warning);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .game-info {

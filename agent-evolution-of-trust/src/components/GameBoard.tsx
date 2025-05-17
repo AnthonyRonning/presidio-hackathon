@@ -23,8 +23,14 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
     
   // Get last round data
   const lastRound = gameState.history[gameState.history.length - 1];
-  const leftBotAction = lastRound?.actions.find(a => a.botId === botLeft?.id);
-  const rightBotAction = lastRound?.actions.find(a => a.botId === botRight?.id);
+  // Get both intended and observed actions
+  const intendedActions = lastRound?.actions || [];
+  const observedActions = lastRound?.observedActions || lastRound?.actions || [];
+  
+  const leftBotIntended = intendedActions.find(a => a.botId === botLeft?.id);
+  const leftBotObserved = observedActions.find(a => a.botId === botLeft?.id);
+  const rightBotIntended = intendedActions.find(a => a.botId === botRight?.id);
+  const rightBotObserved = observedActions.find(a => a.botId === botRight?.id);
   let leftBotSatChange = lastRound?.satChanges[botLeft?.id || ''];
   let rightBotSatChange = lastRound?.satChanges[botRight?.id || ''];
   
@@ -52,6 +58,7 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
         maxRounds={gameState.maxRounds} 
         gameStatus={gameState.isGameOver ? 'ended' : 'active'} 
         winner={gameState.winner}
+        winCondition={gameState.winCondition}
       />
       
       <div className="game-field">
@@ -60,7 +67,8 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
             <BotDisplay 
               bot={botLeft} 
               side="left" 
-              lastAction={leftBotAction}
+              intendedAction={leftBotIntended}
+              observedAction={leftBotObserved}
               satChange={leftBotSatChange}
               begStatus={leftBegStatus}
             />
@@ -76,7 +84,8 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
             <BotDisplay 
               bot={botRight} 
               side="right" 
-              lastAction={rightBotAction}
+              intendedAction={rightBotIntended}
+              observedAction={rightBotObserved}
               satChange={rightBotSatChange}
               begStatus={rightBegStatus}
             />

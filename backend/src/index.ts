@@ -82,7 +82,7 @@ app.get('/api/game', (req, res) => {
   }
 });
 
-app.post('/api/game/next-round', (req, res) => {
+app.post('/api/game/next-round', async (req, res) => {
   const session = req.session as SessionData;
   
   if (!session.gameId) {
@@ -90,7 +90,7 @@ app.post('/api/game/next-round', (req, res) => {
   }
   
   try {
-    const game = gameManager.processNextRound(session.gameId);
+    const game = await gameManager.processNextRound(session.gameId);
     res.json(game);
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });
