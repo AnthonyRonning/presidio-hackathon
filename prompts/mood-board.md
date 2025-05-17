@@ -1,4 +1,12 @@
-\[media pointer="file-service://file-GNQw1muAtayHYEyVXPN8Ew"]
+I am interested in making a game for a hackathon. My idea is to have two AI bots play a game against each other. It could be in the style of the Spy vs Spy game where they fight against each other. I need to design visual characters and design aesthetic for the game. help me create a prompt I can use to make a mood board for how the game will look. First help me understand the different elements I need to design. For example, I'm thinking some things I need are:
+1. scene background
+2. two main characters
+3. on screen h.u.d. elements like player health, interface for text from each character to show up
+
+Help me understand the design elements I should be thinking about and then come up with how to generate it with a visual gen AI
+
+------ ITERATION 2 ------
+
 I am taking your suggestions and putting in my opinions. Help me refine the prompt.
 
 Below is a breakdown of the design elements you may want to consider, followed by an example prompt you could use with a visual generation AI to help you create a cohesive mood board.
