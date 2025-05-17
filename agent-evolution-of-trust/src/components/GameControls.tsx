@@ -5,16 +5,16 @@ import './GameControls.css';
 interface GameControlsProps {
   gameState: GameState;
   onNextRound: () => void;
+  onReset: () => void;
 }
 
-const GameControls = ({ gameState, onNextRound }: GameControlsProps) => {
-  const isGameOver = gameState.gameStatus === 'ended' || 
-    gameState.round >= gameState.maxRounds ||
-    gameState.bots.filter(bot => bot.isAlive).length <= 1;
+const GameControls = ({ gameState, onNextRound, onReset }: GameControlsProps) => {
+  const isGameOver = gameState.isGameOver;
+  const hasPendingBegRequests = gameState.pendingBegRequests.length > 0;
 
   const handleButtonClick = () => {
     if (isGameOver) {
-      window.location.reload();
+      onReset();
     } else {
       onNextRound();
     }
@@ -25,7 +25,7 @@ const GameControls = ({ gameState, onNextRound }: GameControlsProps) => {
       <button 
         className="control-button primary"
         onClick={handleButtonClick}
-        disabled={false}
+        disabled={!isGameOver && hasPendingBegRequests}
       >
         {isGameOver ? (
           <>
@@ -39,6 +39,11 @@ const GameControls = ({ gameState, onNextRound }: GameControlsProps) => {
           </>
         )}
       </button>
+      {hasPendingBegRequests && !isGameOver && (
+        <p className="pending-message">
+          Please respond to pending beg requests before continuing
+        </p>
+      )}
     </div>
   );
 };

@@ -49,3 +49,7 @@ export interface GameState {
     reason: string;
   }[];
 }
+
+export interface SessionData {
+  gameId?: string;
+}

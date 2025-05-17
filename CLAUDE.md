@@ -13,6 +13,15 @@ bun run build      # Build for production
 bun run lint       # Run linting
 ```
 
+### Backend Server
+```bash
+cd backend
+bun install         # Install dependencies
+bun run dev        # Start development server
+bun run build      # Build for production
+bun run lint       # Run linting
+```
+
 ### Development Environment
 ```bash
 # Uses Nix flake for environment setup

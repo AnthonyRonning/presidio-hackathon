@@ -1,51 +1,96 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './index.css';
-import type { GameState, Bot } from './types/game';
+import type { GameState } from './types/game';
 import GameBoard from './components/GameBoard';
-
-const initialBots: Bot[] = [
-  {
-    id: 'bot-1',
-    name: 'Agent Alpha',
-    sats: 50,
-    initialSats: 50,
-    isAlive: true,
-    teamId: 'team-1',
-    history: [],
-  },
-  {
-    id: 'bot-2',
-    name: 'Agent Beta',
-    sats: 50,
-    initialSats: 50,
-    isAlive: true,
-    teamId: 'team-2',
-    history: [],
-  },
-];
-
-const initialGameState: GameState = {
-  round: 0,
-  maxRounds: 30,
-  bots: initialBots,
-  gameStatus: 'waiting',
-  winner: null,
-};
+import { api } from './utils/api';
 
 function App() {
-  const [gameState, setGameState] = useState<GameState>(initialGameState);
+  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleNextRound = () => {
-    setGameState((prev) => ({
-      ...prev,
-      round: prev.round + 1,
-      gameStatus: 'active',
-    }));
+  useEffect(() => {
+    loadGame();
+  }, []);
+
+  const loadGame = async () => {
+    try {
+      setLoading(true);
+      const game = await api.getGame();
+      setGameState(game);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load game');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleNextRound = async () => {
+    try {
+      setLoading(true);
+      const game = await api.nextRound();
+      setGameState(game);
+      setError(null);
+    } catch (err) {
+      setError('Failed to advance round');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBegResponse = async (botId: string, approved: boolean, comment: string) => {
+    try {
+      const game = await api.respondToBeg(botId, approved, comment);
+      setGameState(game);
+      setError(null);
+    } catch (err) {
+      setError('Failed to respond to beg request');
+      console.error(err);
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      setLoading(true);
+      const game = await api.resetGame();
+      setGameState(game);
+      setError(null);
+    } catch (err) {
+      setError('Failed to reset game');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="app-loading">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="app-error">
+        <p>{error}</p>
+        <button onClick={loadGame}>Retry</button>
+      </div>
+    );
+  }
+
+  if (!gameState) {
+    return null;
+  }
 
   return (
     <div className="app">
-      <GameBoard gameState={gameState} onNextRound={handleNextRound} />
+      <GameBoard 
+        gameState={gameState} 
+        onNextRound={handleNextRound}
+        onBegResponse={handleBegResponse}
+        onReset={handleReset}
+      />
     </div>
   );
 }

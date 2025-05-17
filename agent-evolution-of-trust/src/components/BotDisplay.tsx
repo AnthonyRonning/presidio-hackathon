@@ -1,14 +1,35 @@
-import type { Bot } from '../types/game';
+import type { Bot, GameAction } from '../types/game';
 import HealthBar from './HealthBar';
-import { Bot as BotIcon } from 'lucide-react';
+import { Bot as BotIcon, Shield, Swords, HandMetal, Circle, HelpingHand, Copy } from 'lucide-react';
 import './BotDisplay.css';
 
 interface BotDisplayProps {
   bot: Bot;
   side: 'left' | 'right';
+  lastAction?: GameAction;
+  satChange?: number;
 }
 
-const BotDisplay = ({ bot, side }: BotDisplayProps) => {
+const getActionIcon = (action: string) => {
+  switch (action) {
+    case 'HighFive':
+      return <HandMetal size={24} />;
+    case 'Attack':
+      return <Swords size={24} />;
+    case 'Block':
+      return <Shield size={24} />;
+    case 'DoNothing':
+      return <Circle size={24} />;
+    case 'Beg':
+      return <HelpingHand size={24} />;
+    case 'Replicate':
+      return <Copy size={24} />;
+    default:
+      return null;
+  }
+};
+
+const BotDisplay = ({ bot, side, lastAction, satChange }: BotDisplayProps) => {
   const MAX_SATS = 100;
   const healthPercentage = (bot.sats / MAX_SATS) * 100;
 
@@ -41,6 +62,20 @@ const BotDisplay = ({ bot, side }: BotDisplayProps) => {
           </span>
         </div>
       </div>
+      
+      {lastAction && (
+        <div className="last-action">
+          <div className="action-container">
+            <span className="action-icon">{getActionIcon(lastAction.action)}</span>
+            <span className="action-label">{lastAction.action}</span>
+            {satChange !== undefined && (
+              <span className={`sats-change ${satChange >= 0 ? 'positive' : 'negative'}`}>
+                {satChange >= 0 ? '+' : ''}{satChange}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

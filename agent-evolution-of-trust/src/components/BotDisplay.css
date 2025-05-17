@@ -71,6 +71,51 @@
   color: var(--danger);
 }
 
+.last-action {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.action-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+}
+
+.action-label {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sats-change {
+  font-size: 14px;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+.sats-change.positive {
+  color: #4ade80;
+}
+
+.sats-change.negative {
+  color: #f87171;
+}
+
 @media (max-width: 768px) {
   .bot-display {
     min-width: 200px;
