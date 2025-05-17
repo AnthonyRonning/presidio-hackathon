@@ -23,18 +23,20 @@ export interface GameAction {
   reason?: string;  // For beg action
 }
 
+export interface BegRequest {
+  botId: string;
+  amount: number;
+  reason: string;
+  status?: 'pending' | 'approved' | 'rejected';
+}
+
 export interface RoundResult {
   actions: GameAction[];  // What bots intended to do
   observedActions?: GameAction[];  // What others saw (for missed HighFives)
   satChanges: { [botId: string]: number };
   newBots?: Bot[];
   eliminatedBots?: string[];
-  begRequests?: {
-    botId: string;
-    amount: number;
-    reason: string;
-    status: 'pending' | 'approved' | 'rejected';
-  }[];
+  begRequests?: BegRequest[];
   begRequest?: {  // Single beg request result for history
     botId: string;
     amount: number;
@@ -53,9 +55,5 @@ export interface GameState {
   winner?: string;
   winCondition?: 'replication' | 'maxRounds';
   history: RoundResult[];
-  pendingBegRequests: {
-    botId: string;
-    amount: number;
-    reason: string;
-  }[];
+  pendingBegRequests: BegRequest[];
 }

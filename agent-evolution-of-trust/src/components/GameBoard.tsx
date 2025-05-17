@@ -12,7 +12,7 @@ interface GameBoardProps {
   isLoading?: boolean;
 }
 
-const GameBoard = ({ gameState, onNextRound, onReset, isLoading }: GameBoardProps) => {
+const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }: GameBoardProps) => {
   // Get all bots from all teams
   const allBots = gameState.teams.flatMap(team => team.bots);
   const aliveBots = allBots.filter(bot => bot.isAlive);
@@ -51,6 +51,10 @@ const GameBoard = ({ gameState, onNextRound, onReset, isLoading }: GameBoardProp
   // Get beg status for display
   const leftBegStatus = lastRound?.begRequests?.find(req => req.botId === botLeft?.id)?.status;
   const rightBegStatus = lastRound?.begRequests?.find(req => req.botId === botRight?.id)?.status;
+  
+  // Get pending beg requests for inline display
+  const leftPendingBeg = gameState.pendingBegRequests.find(req => req.botId === botLeft?.id);
+  const rightPendingBeg = gameState.pendingBegRequests.find(req => req.botId === botRight?.id);
 
   return (
     <div className="game-board">
@@ -72,6 +76,8 @@ const GameBoard = ({ gameState, onNextRound, onReset, isLoading }: GameBoardProp
               observedAction={leftBotObserved}
               satChange={leftBotSatChange}
               begStatus={leftBegStatus}
+              pendingBegRequest={leftPendingBeg}
+              onBegResponse={(approved, comment) => onBegResponse(botLeft.id, approved, comment)}
             />
           )}
         </div>
@@ -89,6 +95,8 @@ const GameBoard = ({ gameState, onNextRound, onReset, isLoading }: GameBoardProp
               observedAction={rightBotObserved}
               satChange={rightBotSatChange}
               begStatus={rightBegStatus}
+              pendingBegRequest={rightPendingBeg}
+              onBegResponse={(approved, comment) => onBegResponse(botRight.id, approved, comment)}
             />
           )}
         </div>

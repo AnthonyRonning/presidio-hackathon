@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import './index.css';
 import type { GameState } from './types/game';
 import GameBoard from './components/GameBoard';
-import BegModal from './components/BegModal';
 import { api } from './utils/api';
 
 function App() {
@@ -85,14 +84,6 @@ function App() {
     return null;
   }
 
-  // Get the current pending beg request (if any)
-  const currentBegRequest = gameState.pendingBegRequests[0];
-  const requestingBot = currentBegRequest 
-    ? gameState.teams
-        .flatMap(team => team.bots)
-        .find(bot => bot.id === currentBegRequest.botId)
-    : null;
-
   return (
     <div className="app">
       <GameBoard 
@@ -102,16 +93,6 @@ function App() {
         onReset={handleReset}
         isLoading={isActionLoading}
       />
-      
-      {currentBegRequest && requestingBot && (
-        <BegModal
-          botName={requestingBot.name}
-          amount={currentBegRequest.amount}
-          reason={currentBegRequest.reason}
-          onAccept={(comment) => handleBegResponse(currentBegRequest.botId, true, comment)}
-          onDecline={(comment) => handleBegResponse(currentBegRequest.botId, false, comment)}
-        />
-      )}
     </div>
   );
 }
