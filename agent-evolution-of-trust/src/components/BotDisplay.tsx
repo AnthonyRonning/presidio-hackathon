@@ -6,7 +6,8 @@ import './BotDisplay.css';
 interface BotDisplayProps {
   bot: Bot;
   side: 'left' | 'right';
-  lastAction?: GameAction;
+  intendedAction?: GameAction;
+  observedAction?: GameAction;
   satChange?: number;
   begStatus?: 'approved' | 'rejected' | 'pending';
 }
@@ -30,7 +31,7 @@ const getActionIcon = (action: string, begStatus?: string) => {
   }
 };
 
-const BotDisplay = ({ bot, side, lastAction, satChange, begStatus }: BotDisplayProps) => {
+const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus }: BotDisplayProps) => {
   const MAX_SATS = 100;
   const healthPercentage = (bot.sats / MAX_SATS) * 100;
 
@@ -64,23 +65,43 @@ const BotDisplay = ({ bot, side, lastAction, satChange, begStatus }: BotDisplayP
         </div>
       </div>
       
-      {lastAction && (
+      {(intendedAction || observedAction) && (
         <div className="last-action">
           <div className="action-container">
-            <span className="action-icon">{getActionIcon(lastAction.action, begStatus)}</span>
+            {/* Show if HighFive missed */}
+            {intendedAction?.action === 'HighFive' && observedAction?.action === 'Attack' && (
+              <div className="missed-highfive">
+                <span className="missed-label">MISSED!</span>
+              </div>
+            )}
+            
+            <span className="action-icon">
+              {getActionIcon(observedAction?.action || intendedAction?.action || '', begStatus)}
+            </span>
+            
             <div className="action-details">
               <div className="action-line">
-                <span className="action-label">{lastAction.action}</span>
-                {lastAction.action === 'Beg' && begStatus && (
+                <span className="action-label">
+                  {observedAction?.action || intendedAction?.action}
+                </span>
+                
+                {/* Show intended action if it differs */}
+                {intendedAction?.action === 'HighFive' && observedAction?.action === 'Attack' && (
+                  <span className="intended-action">(tried to HighFive)</span>
+                )}
+                
+                {intendedAction?.action === 'Beg' && begStatus && (
                   <span className={`beg-status ${begStatus}`}>
                     {` (${begStatus})`}
                   </span>
                 )}
               </div>
-              {lastAction.action === 'Beg' && lastAction.reason && (
-                <div className="beg-reason">{`"${lastAction.reason}"`}</div>
+              
+              {intendedAction?.action === 'Beg' && intendedAction.reason && (
+                <div className="beg-reason">{`"${intendedAction.reason}"`}</div>
               )}
             </div>
+            
             {satChange !== undefined && (
               <span className={`sats-change ${satChange >= 0 ? 'positive' : 'negative'}`}>
                 {satChange >= 0 ? '+' : ''}{satChange}

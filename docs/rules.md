@@ -73,18 +73,30 @@ Below are the six main actions and how they interact. Where relevant, the combin
 ## 3.1 High Five
 
 * **Intent**: Signal cooperation or goodwill.
+* **Miss Mechanic**: There's a **15% chance** that a High Five will "miss" and unintentionally become an Attack.
+  * When a High Five misses:
+    * The bot that missed **still believes** they attempted a High Five
+    * Other bots **only see** an Attack action
+    * The missed High Five follows Attack resolution rules
+    * In the bot's memory/history, they remember attempting a High Five (but it missed)
+    * Other bots' memory/history shows only that they were attacked
 * **Resolution Rules**:
 
-  * **High Five vs. High Five**:
+  * **High Five vs. High Five (both successful)**:
 
     * Both parties gain **+3 sats**.
     * Rationale: Mutual cooperation pays off in the long run.
-  * **High Five vs. Any Other Action** (Attack, Block, Do Nothing, Beg, or if the other tries to Replicate):
+  * **High Five (missed) vs. Any Action**:
+
+    * Resolves as Attack vs. that action (see Attack rules)
+    * The missing bot remembers attempting a High Five
+    * Other bots see only an Attack
+  * **High Five (successful) vs. Any Other Action** (Attack, Block, Do Nothing, Beg, or if the other tries to Replicate):
 
     * The **High Fiver** is “left hanging” and suffers a small penalty: **-2 sats** (they expended effort trusting the other).
     * The non-High-Fiver is unaffected by the “high five” itself (though they still incur or gain outcomes from their own action).
 
-> **Key Insight**: If you attempt to High Five but the opponent chooses Attack, you’ll lose 2, and then you’ll also suffer the effect of their Attack (see Attack rules). So it can be risky to open yourself up unless you trust the other side.
+> **Key Insight**: The miss mechanic adds uncertainty to cooperation attempts. Even with the best intentions, accidents can happen, leading to misunderstandings and potential trust breakdowns. This mirrors real-world miscommunication where good intentions can be misinterpreted.
 
 ## 3.2 Block
 

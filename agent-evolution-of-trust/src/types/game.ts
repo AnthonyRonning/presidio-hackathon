@@ -24,7 +24,8 @@ export interface GameAction {
 }
 
 export interface RoundResult {
-  actions: GameAction[];
+  actions: GameAction[];  // What bots intended to do
+  observedActions?: GameAction[];  // What others saw (for missed HighFives)
   satChanges: { [botId: string]: number };
   newBots?: Bot[];
   eliminatedBots?: string[];
@@ -34,6 +35,13 @@ export interface RoundResult {
     reason: string;
     status: 'pending' | 'approved' | 'rejected';
   }[];
+  begRequest?: {  // Single beg request result for history
+    botId: string;
+    amount: number;
+    reason: string;
+    approved?: boolean;
+    comment?: string;
+  };
 }
 
 export interface GameState {

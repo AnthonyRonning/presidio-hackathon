@@ -164,8 +164,30 @@ export class GameManager {
       status: 'pending' | 'approved' | 'rejected';
     }[] = [];
     
+    // Process HighFive misses
+    const processedActions = actions.map(action => {
+      if (action.action === 'HighFive' && Math.random() < 0.15) {
+        // 15% chance to miss - create Attack action for others to see
+        const attackAction: GameAction = {
+          ...action,
+          action: 'Attack'
+        };
+        return {
+          intended: action,  // Bot remembers attempting HighFive
+          observed: attackAction  // Others see Attack
+        };
+      }
+      return {
+        intended: action,
+        observed: action
+      };
+    });
+    
+    // For the actual action resolution, use observed actions
+    const observedActions = processedActions.map(p => p.observed);
+    
     // Initialize all bot changes to 0
-    actions.forEach(action => {
+    observedActions.forEach(action => {
       satChanges[action.botId] = 0;
       
       // Update consecutive DoNothing counter
@@ -183,18 +205,19 @@ export class GameManager {
         }
       }
       
-      // Handle Beg action
-      if (action.action === 'Beg') {
-        const gameAction = action as GameAction & { amount?: number; reason?: string };
+      // Handle Beg action (using intended action for beg)
+      const intendedAction = processedActions.find(p => p.observed.botId === action.botId)?.intended;
+      if (intendedAction && intendedAction.action === 'Beg') {
+        const gameAction = intendedAction as GameAction & { amount?: number; reason?: string };
         const begRequest = {
-          botId: action.botId,
+          botId: intendedAction.botId,
           amount: gameAction.amount || 5,
           reason: gameAction.reason || 'I need assistance',
           status: 'pending' as const,
         };
         begRequests.push(begRequest);
         game.pendingBegRequests.push({
-          botId: action.botId,
+          botId: intendedAction.botId,
           amount: gameAction.amount || 5,
           reason: gameAction.reason || 'I need assistance',
         });
@@ -202,8 +225,8 @@ export class GameManager {
     });
 
     // For simplicity, let's handle 2-bot interactions first
-    if (actions.length === 2) {
-      const [action1, action2] = actions;
+    if (observedActions.length === 2) {
+      const [action1, action2] = observedActions;
       
       // High Five resolution
       if (action1.action === 'HighFive' && action2.action === 'HighFive') {
@@ -241,8 +264,10 @@ export class GameManager {
       }
     }
 
+    // Return with intended actions for bot memory and observed actions for display
     return {
-      actions,
+      actions: processedActions.map(p => p.intended),  // Bots remember what they intended
+      observedActions: observedActions,  // What others saw
       satChanges,
       begRequests: begRequests.length > 0 ? begRequests : undefined,
     };
@@ -289,6 +314,17 @@ export class GameManager {
       if (request) {
         request.status = approved ? 'approved' : 'rejected';
       }
+    }
+    
+    // Also add the beg approval/denial to history for LLM awareness
+    if (lastRound) {
+      lastRound.begRequest = {
+        botId: botId,
+        amount: begRequest.amount,
+        reason: begRequest.reason,
+        approved: approved,
+        comment: comment
+      };
     }
 
     // Remove the pending request

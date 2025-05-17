@@ -10,8 +10,12 @@ export const GAME_RULES = `
 
 ### 1. HighFive
 - Intent: Signal cooperation
-- HighFive vs HighFive: Both gain +3 sats
-- HighFive vs Other: HighFiver loses -2 sats
+- Miss mechanic: 15% chance to unintentionally become Attack
+  - Bot remembers attempting HighFive (but missed)
+  - Other bots see only Attack
+- HighFive vs HighFive (both successful): Both gain +3 sats
+- HighFive (missed) vs Any: Resolves as Attack
+- HighFive (successful) vs Other: HighFiver loses -2 sats
 
 ### 2. Block
 - Intent: Defend against attack
