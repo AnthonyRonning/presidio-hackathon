@@ -60,7 +60,7 @@ export class GameManager {
     return this.games.get(gameId);
   }
 
-  async processNextRound(gameId: string): Promise<GameState> {
+  async processNextRound(gameId: string, playerCredits?: number): Promise<GameState> {
     const game = this.games.get(gameId);
     if (!game) {
       throw new Error('Game not found');
@@ -103,7 +103,7 @@ export class GameManager {
     
     // Process all bots in parallel for better performance
     const actionPromises = aliveBots.map(bot => 
-      this.openAIService.selectBotAction(bot, game, gameHistory, game.currentRound)
+      this.openAIService.selectBotAction(bot, game, gameHistory, game.currentRound, playerCredits)
     );
     
     const selectedActions = await Promise.all(actionPromises);

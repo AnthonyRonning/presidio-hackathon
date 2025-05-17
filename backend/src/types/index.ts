@@ -62,6 +62,17 @@ export interface GameState {
 
 export interface SessionData {
   gameId?: string;
+  invoiceId?: string;
+  invoicePaid?: boolean;
+  playerCredits?: number;
+}
+
+export interface InvoiceData {
+  id: string;
+  invoice: string;
+  amountSats: number;
+  memo: string;
+  isPaid: boolean;
 }
 
 export interface GameHistory extends RoundResult {

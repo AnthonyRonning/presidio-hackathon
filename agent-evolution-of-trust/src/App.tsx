@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './index.css';
 import type { GameState } from './types/game';
 import GameBoard from './components/GameBoard';
+import PaymentModal from './components/PaymentModal';
 import { api } from './utils/api';
 
 function App() {
@@ -9,9 +10,36 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isTopUp, setIsTopUp] = useState(false);
+  const [playerCredits, setPlayerCredits] = useState(0);
+
+  const checkPaymentStatus = useCallback(async () => {
+    try {
+      const status = await api.checkInvoiceStatus();
+      if (status.isPaid) {
+        setPlayerCredits(status.playerCredits);
+        setShowPaymentModal(false);
+        return true;
+      }
+    } catch {
+      // No invoice yet, that's fine
+      console.log('No active invoice');
+    }
+    return false;
+  }, []);
 
   useEffect(() => {
-    loadGame();
+    const checkAndLoadGame = async () => {
+      const isPaid = await checkPaymentStatus();
+      await loadGame(); // Always load the game
+      if (!isPaid) {
+        setShowPaymentModal(true); // Show modal if not paid
+      }
+    };
+    
+    checkAndLoadGame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadGame = async () => {
@@ -29,6 +57,21 @@ function App() {
   };
 
   const handleNextRound = async () => {
+    // Check if user has paid before allowing to play
+    try {
+      const status = await api.checkInvoiceStatus();
+      if (!status.isPaid) {
+        setIsTopUp(false);
+        setShowPaymentModal(true);
+        return;
+      }
+    } catch {
+      // No invoice, show payment modal
+      setIsTopUp(false);
+      setShowPaymentModal(true);
+      return;
+    }
+
     try {
       setIsActionLoading(true);
       const game = await api.nextRound();
@@ -44,8 +87,9 @@ function App() {
 
   const handleBegResponse = async (botId: string, approved: boolean, comment: string) => {
     try {
-      const game = await api.respondToBeg(botId, approved, comment);
-      setGameState(game);
+      const response = await api.respondToBeg(botId, approved, comment);
+      setGameState(response.game);
+      setPlayerCredits(response.playerCredits);
       setError(null);
     } catch (err) {
       setError('Failed to respond to beg request');
@@ -65,6 +109,18 @@ function App() {
     } finally {
       setIsActionLoading(false);
     }
+  };
+
+  const handlePaymentComplete = async () => {
+    const status = await api.checkInvoiceStatus();
+    setPlayerCredits(status.playerCredits);
+    setShowPaymentModal(false);
+    setIsTopUp(false);
+  };
+
+  const handleTopUp = () => {
+    setIsTopUp(true);
+    setShowPaymentModal(true);
   };
 
   if (loading) {
@@ -92,7 +148,19 @@ function App() {
         onBegResponse={handleBegResponse}
         onReset={handleReset}
         isLoading={isActionLoading}
+        playerCredits={playerCredits}
+        onTopUp={handleTopUp}
       />
+      {showPaymentModal && (
+        <PaymentModal 
+          onPaymentComplete={handlePaymentComplete}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setIsTopUp(false);
+          }}
+          isTopUp={isTopUp}
+        />
+      )}
     </div>
   );
 }
