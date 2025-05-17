@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { GameState, Bot, Team, GameAction, RoundResult } from '../types';
+import { GameState, Bot, Team, GameAction, RoundResult, ActionType } from '../types';
 
 export class GameManager {
   private games: Map<string, GameState> = new Map();
@@ -17,6 +17,7 @@ export class GameManager {
         sats: 50,
         isAlive: true,
         teamId: '',
+        consecutiveDoNothing: 0,
       }],
     };
     team1.bots[0].teamId = team1.id;
@@ -30,6 +31,7 @@ export class GameManager {
         sats: 50,
         isAlive: true,
         teamId: '',
+        consecutiveDoNothing: 0,
       }],
     };
     team2.bots[0].teamId = team2.id;
@@ -138,10 +140,10 @@ export class GameManager {
     return game;
   }
 
-  private chooseAction(bot: Bot, game: GameState): 'HighFive' | 'Attack' | 'Block' | 'DoNothing' {
+  private chooseAction(bot: Bot, game: GameState): ActionType {
     // Simple AI strategy for now
-    const actions: ('HighFive' | 'Attack' | 'Block' | 'DoNothing')[] = 
-      ['HighFive', 'Attack', 'Block', 'DoNothing'];
+    const actions: ActionType[] = 
+      ['HighFive', 'Attack', 'Block', 'DoNothing', 'Beg'];
     
     // Random selection for initial implementation
     return actions[Math.floor(Math.random() * actions.length)];
@@ -149,10 +151,48 @@ export class GameManager {
 
   private processActions(actions: GameAction[], game: GameState): RoundResult {
     const satChanges: { [botId: string]: number } = {};
+    const begRequests: {
+      botId: string;
+      amount: number;
+      reason: string;
+      status: 'pending' | 'approved' | 'rejected';
+    }[] = [];
     
     // Initialize all bot changes to 0
     actions.forEach(action => {
       satChanges[action.botId] = 0;
+      
+      // Update consecutive DoNothing counter
+      const bot = this.findBot(game, action.botId);
+      if (bot) {
+        if (action.action === 'DoNothing') {
+          bot.consecutiveDoNothing++;
+          // Apply penalty on 3rd consecutive DoNothing
+          if (bot.consecutiveDoNothing >= 3) {
+            satChanges[action.botId] -= 3;
+          }
+        } else {
+          // Reset counter when any other action is taken
+          bot.consecutiveDoNothing = 0;
+        }
+      }
+      
+      // Handle Beg action
+      if (action.action === 'Beg') {
+        // Hardcoded for now, will be replaced with LLM logic later
+        const begRequest = {
+          botId: action.botId,
+          amount: 5,
+          reason: 'please gimme sats',
+          status: 'pending' as const,
+        };
+        begRequests.push(begRequest);
+        game.pendingBegRequests.push({
+          botId: action.botId,
+          amount: 5,
+          reason: 'please gimme sats',
+        });
+      }
     });
 
     // For simplicity, let's handle 2-bot interactions first
@@ -198,6 +238,7 @@ export class GameManager {
     return {
       actions,
       satChanges,
+      begRequests: begRequests.length > 0 ? begRequests : undefined,
     };
   }
 
@@ -221,8 +262,30 @@ export class GameManager {
       throw new Error('Game not found');
     }
 
-    // Handle beg response logic here
-    // For now, just clear the pending request
+    // Find the pending beg request
+    const begRequest = game.pendingBegRequests.find(req => req.botId === botId);
+    if (!begRequest) {
+      throw new Error('No pending beg request for this bot');
+    }
+
+    // If approved, grant the sats
+    if (approved) {
+      const bot = this.findBot(game, botId);
+      if (bot && bot.isAlive) {
+        bot.sats += begRequest.amount;
+      }
+    }
+
+    // Update the last round's history with the beg response
+    const lastRound = game.history[game.history.length - 1];
+    if (lastRound && lastRound.begRequests) {
+      const request = lastRound.begRequests.find(req => req.botId === botId);
+      if (request) {
+        request.status = approved ? 'approved' : 'rejected';
+      }
+    }
+
+    // Remove the pending request
     game.pendingBegRequests = game.pendingBegRequests.filter(req => req.botId !== botId);
 
     return game;

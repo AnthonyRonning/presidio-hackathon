@@ -8,9 +8,10 @@ interface BotDisplayProps {
   side: 'left' | 'right';
   lastAction?: GameAction;
   satChange?: number;
+  begStatus?: 'approved' | 'rejected' | 'pending';
 }
 
-const getActionIcon = (action: string) => {
+const getActionIcon = (action: string, begStatus?: string) => {
   switch (action) {
     case 'HighFive':
       return <HandMetal size={24} />;
@@ -21,7 +22,7 @@ const getActionIcon = (action: string) => {
     case 'DoNothing':
       return <Circle size={24} />;
     case 'Beg':
-      return <HelpingHand size={24} />;
+      return <HelpingHand size={24} color={begStatus === 'approved' ? '#22c55e' : begStatus === 'rejected' ? '#ef4444' : undefined} />;
     case 'Replicate':
       return <Copy size={24} />;
     default:
@@ -29,7 +30,7 @@ const getActionIcon = (action: string) => {
   }
 };
 
-const BotDisplay = ({ bot, side, lastAction, satChange }: BotDisplayProps) => {
+const BotDisplay = ({ bot, side, lastAction, satChange, begStatus }: BotDisplayProps) => {
   const MAX_SATS = 100;
   const healthPercentage = (bot.sats / MAX_SATS) * 100;
 
@@ -66,8 +67,15 @@ const BotDisplay = ({ bot, side, lastAction, satChange }: BotDisplayProps) => {
       {lastAction && (
         <div className="last-action">
           <div className="action-container">
-            <span className="action-icon">{getActionIcon(lastAction.action)}</span>
-            <span className="action-label">{lastAction.action}</span>
+            <span className="action-icon">{getActionIcon(lastAction.action, begStatus)}</span>
+            <span className="action-label">
+              {lastAction.action}
+              {lastAction.action === 'Beg' && begStatus && (
+                <span className={`beg-status ${begStatus}`}>
+                  {` (${begStatus})`}
+                </span>
+              )}
+            </span>
             {satChange !== undefined && (
               <span className={`sats-change ${satChange >= 0 ? 'positive' : 'negative'}`}>
                 {satChange >= 0 ? '+' : ''}{satChange}
