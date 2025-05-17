@@ -1,7 +1,7 @@
 import type { Bot, GameAction, BegRequest as BegRequestType } from '../types/game';
 import HealthBar from './HealthBar';
 import BegRequest from './BegRequest';
-import { Bot as BotIcon, Shield, Swords, HandMetal, Circle, HelpingHand, Copy } from 'lucide-react';
+import { Shield, Swords, HandMetal, Circle, HelpingHand, Copy } from 'lucide-react';
 import './BotDisplay.css';
 
 interface BotDisplayProps {
@@ -13,6 +13,7 @@ interface BotDisplayProps {
   begStatus?: 'approved' | 'rejected' | 'pending';
   pendingBegRequest?: BegRequestType;
   onBegResponse?: (approved: boolean, comment: string) => void;
+  playerNumber?: 1 | 2;
 }
 
 const getActionIcon = (action: string, begStatus?: string) => {
@@ -34,94 +35,75 @@ const getActionIcon = (action: string, begStatus?: string) => {
   }
 };
 
-const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus, pendingBegRequest, onBegResponse }: BotDisplayProps) => {
+const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus, pendingBegRequest, onBegResponse, playerNumber = 1 }: BotDisplayProps) => {
   const MAX_SATS = 100;
   const healthPercentage = (bot.sats / MAX_SATS) * 100;
+  const playerImage = `/player${playerNumber}-neutral.png`;
 
   return (
     <div className={`bot-display ${side}`}>
-      <div className="bot-name">{bot.name}</div>
-      
-      <div className="bot-icon-container">
-        <BotIcon 
-          size={80} 
-          className={`bot-icon ${!bot.isAlive ? 'bot-dead' : ''}`}
-        />
-      </div>
-      
-      <HealthBar 
-        current={bot.sats}
-        max={MAX_SATS}
-        percentage={healthPercentage}
-      />
-      
-      <div className="bot-stats">
-        <div className="stat">
-          <span className="stat-label">Sats</span>
-          <span className="stat-value">{bot.sats}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Status</span>
-          <span className={`stat-value status-${bot.isAlive ? 'alive' : 'dead'}`}>
-            {bot.isAlive ? 'Alive' : 'Dead'}
-          </span>
-        </div>
-      </div>
-      
-      {(intendedAction || observedAction) && (
-        <div className="last-action">
-          <div className="action-container">
-            {/* Show if HighFive missed */}
+      <div className={`bot-dynamic-content ${side}`}>
+        {!pendingBegRequest && (intendedAction || observedAction) && (
+          <div className="action-display">
             {intendedAction?.action === 'HighFive' && observedAction?.action === 'Attack' && (
-              <div className="missed-highfive">
-                <span className="missed-label">MISSED!</span>
-              </div>
+              <div className="missed-badge">MISSED!</div>
             )}
             
-            <span className="action-icon">
-              {getActionIcon(observedAction?.action || intendedAction?.action || '', begStatus)}
-            </span>
-            
-            <div className="action-details">
-              <div className="action-line">
-                <span className="action-label">
-                  {observedAction?.action || intendedAction?.action}
+            <div className="action-row">
+              <span className="action-icon">
+                {getActionIcon(observedAction?.action || intendedAction?.action || '', begStatus)}
+              </span>
+              <span className="action-label">
+                {observedAction?.action || intendedAction?.action}
+              </span>
+              {satChange !== undefined && (
+                <span className={`sats-change ${satChange >= 0 ? 'positive' : 'negative'}`}>
+                  {satChange >= 0 ? '+' : ''}{satChange}
                 </span>
-                
-                {/* Show intended action if it differs */}
-                {intendedAction?.action === 'HighFive' && observedAction?.action === 'Attack' && (
-                  <span className="intended-action">(tried to HighFive)</span>
-                )}
-                
-                {intendedAction?.action === 'Beg' && begStatus && (
-                  <span className={`beg-status ${begStatus}`}>
-                    {` (${begStatus})`}
-                  </span>
-                )}
-              </div>
-              
-              {intendedAction?.action === 'Beg' && intendedAction.reason && (
-                <div className="beg-reason">{`"${intendedAction.reason}"`}</div>
               )}
             </div>
             
-            {satChange !== undefined && (
-              <span className={`sats-change ${satChange >= 0 ? 'positive' : 'negative'}`}>
-                {satChange >= 0 ? '+' : ''}{satChange}
+            {intendedAction?.action === 'Beg' && begStatus && (
+              <span className={`beg-status ${begStatus}`}>
+                ({begStatus})
               </span>
             )}
+            
+            {intendedAction?.action === 'HighFive' && observedAction?.action === 'Attack' && (
+              <span className="intended-action">(tried to HighFive)</span>
+            )}
           </div>
-        </div>
-      )}
+        )}
+        
+        {pendingBegRequest && onBegResponse && (
+          <BegRequest
+            amount={pendingBegRequest.amount}
+            reason={pendingBegRequest.reason}
+            onAccept={(comment) => onBegResponse(true, comment)}
+            onDecline={(comment) => onBegResponse(false, comment)}
+          />
+        )}
+      </div>
       
-      {pendingBegRequest && onBegResponse && (
-        <BegRequest
-          amount={pendingBegRequest.amount}
-          reason={pendingBegRequest.reason}
-          onAccept={(comment) => onBegResponse(true, comment)}
-          onDecline={(comment) => onBegResponse(false, comment)}
+      <div className="bot-static-content">
+        <div className="bot-visual">
+          <div className="bot-icon-wrapper">
+            <img
+              src={playerImage}
+              alt={bot.name}
+              className={`bot-icon ${!bot.isAlive ? 'bot-dead' : ''}`}
+            />
+          </div>
+          
+          <div className="bot-name">{bot.name}</div>
+        </div>
+        
+        <HealthBar 
+          current={bot.sats}
+          max={MAX_SATS}
+          percentage={healthPercentage}
         />
-      )}
+      </div>
     </div>
   );
 };

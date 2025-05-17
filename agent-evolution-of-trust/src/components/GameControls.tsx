@@ -40,11 +40,6 @@ const GameControls = ({ gameState, onNextRound, onReset, isLoading }: GameContro
           </>
         )}
       </button>
-      {hasPendingBegRequests && !isGameOver && (
-        <p className="pending-message">
-          Please respond to pending beg requests before continuing
-        </p>
-      )}
     </div>
   );
 };

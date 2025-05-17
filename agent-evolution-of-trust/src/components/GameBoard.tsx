@@ -58,13 +58,20 @@ const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }
 
   return (
     <div className="game-board">
-      <GameHeader 
-        round={gameState.currentRound} 
-        maxRounds={gameState.maxRounds} 
-        gameStatus={gameState.isGameOver ? 'ended' : 'active'} 
-        winner={gameState.winner}
-        winCondition={gameState.winCondition}
-      />
+      <div className="game-info">
+        <div className="round-display">
+          ROUND {gameState.currentRound} / {gameState.maxRounds}
+        </div>
+        {gameState.isGameOver ? (
+          <div className="game-status ended">
+            {gameState.winner} WINS!
+          </div>
+        ) : (
+          <div className="game-status active">
+            First to 100 sats wins!
+          </div>
+        )}
+      </div>
       
       <div className="game-field">
         <div className="bot-area bot-area-left">
@@ -78,6 +85,7 @@ const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }
               begStatus={leftBegStatus}
               pendingBegRequest={leftPendingBeg}
               onBegResponse={(approved, comment) => onBegResponse(botLeft.id, approved, comment)}
+              playerNumber={1}
             />
           )}
         </div>
@@ -97,17 +105,20 @@ const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading }
               begStatus={rightBegStatus}
               pendingBegRequest={rightPendingBeg}
               onBegResponse={(approved, comment) => onBegResponse(botRight.id, approved, comment)}
+              playerNumber={2}
             />
           )}
         </div>
       </div>
       
-      <GameControls 
-        gameState={gameState} 
-        onNextRound={onNextRound}
-        onReset={onReset}
-        isLoading={isLoading}
-      />
+      <div className="game-controls-overlay">
+        <GameControls 
+          gameState={gameState} 
+          onNextRound={onNextRound}
+          onReset={onReset}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 };
