@@ -6,3 +6,31 @@ Allow an LLM to have access to `create_invoice` and/or `pay_invoice` tool calls,
 
 Some user facing ideas: 
 - Users can fund and create a "job" or "task" that allows people to submit potential requirements that fulfill that task along with an invoice. If an LLM decides that it's worthy of a payout then it will pay from the funder's wallet. 
+
+2. Confidential LLM as a judge
+
+bounties, prediciton markets, tagging training data
+
+3. Paid Training Data Platform
+
+(farming out data annotation tasks)
+
+users to share their data for ai model training with rewards paid in bitcoin
+
+Need to research this. 
+
+4. Atonomous agents
+
+Self replicating agents. 
+
+4. Money bot
+
+5. Agent vs agents
+
+Spy vs spy, would need to figure out what they are "attacking"
+
+agents collecting the loot, bobbie traps cost money but they get more money as a result for getting the traps
+
+audeince can fund an agent
+
+
