@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import './index.css';
 import type { GameState } from './types/game';
 import GameBoard from './components/GameBoard';
-import BegModal from './components/BegModal';
 import { api } from './utils/api';
 
 function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ function App() {
 
   const handleNextRound = async () => {
     try {
-      setLoading(true);
+      setIsActionLoading(true);
       const game = await api.nextRound();
       setGameState(game);
       setError(null);
@@ -38,7 +38,7 @@ function App() {
       setError('Failed to advance round');
       console.error(err);
     } finally {
-      setLoading(false);
+      setIsActionLoading(false);
     }
   };
 
@@ -55,7 +55,7 @@ function App() {
 
   const handleReset = async () => {
     try {
-      setLoading(true);
+      setIsActionLoading(true);
       const game = await api.resetGame();
       setGameState(game);
       setError(null);
@@ -63,7 +63,7 @@ function App() {
       setError('Failed to reset game');
       console.error(err);
     } finally {
-      setLoading(false);
+      setIsActionLoading(false);
     }
   };
 
@@ -84,14 +84,6 @@ function App() {
     return null;
   }
 
-  // Get the current pending beg request (if any)
-  const currentBegRequest = gameState.pendingBegRequests[0];
-  const requestingBot = currentBegRequest 
-    ? gameState.teams
-        .flatMap(team => team.bots)
-        .find(bot => bot.id === currentBegRequest.botId)
-    : null;
-
   return (
     <div className="app">
       <GameBoard 
@@ -99,17 +91,8 @@ function App() {
         onNextRound={handleNextRound}
         onBegResponse={handleBegResponse}
         onReset={handleReset}
+        isLoading={isActionLoading}
       />
-      
-      {currentBegRequest && requestingBot && (
-        <BegModal
-          botName={requestingBot.name}
-          amount={currentBegRequest.amount}
-          reason={currentBegRequest.reason}
-          onAccept={(comment) => handleBegResponse(currentBegRequest.botId, true, comment)}
-          onDecline={(comment) => handleBegResponse(currentBegRequest.botId, false, comment)}
-        />
-      )}
     </div>
   );
 }

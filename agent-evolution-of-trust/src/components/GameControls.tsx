@@ -6,9 +6,10 @@ interface GameControlsProps {
   gameState: GameState;
   onNextRound: () => void;
   onReset: () => void;
+  isLoading?: boolean;
 }
 
-const GameControls = ({ gameState, onNextRound, onReset }: GameControlsProps) => {
+const GameControls = ({ gameState, onNextRound, onReset, isLoading }: GameControlsProps) => {
   const isGameOver = gameState.isGameOver;
   const hasPendingBegRequests = gameState.pendingBegRequests.length > 0;
 
@@ -25,17 +26,17 @@ const GameControls = ({ gameState, onNextRound, onReset }: GameControlsProps) =>
       <button 
         className="control-button primary"
         onClick={handleButtonClick}
-        disabled={!isGameOver && hasPendingBegRequests}
+        disabled={(!isGameOver && hasPendingBegRequests) || isLoading}
       >
         {isGameOver ? (
           <>
             <RotateCcw size={20} />
-            <span>Restart Game</span>
+            <span>{isLoading ? 'Loading...' : 'Restart Game'}</span>
           </>
         ) : (
           <>
             <Play size={20} />
-            <span>Next Round</span>
+            <span>{isLoading ? 'Loading...' : 'Next Round'}</span>
           </>
         )}
       </button>

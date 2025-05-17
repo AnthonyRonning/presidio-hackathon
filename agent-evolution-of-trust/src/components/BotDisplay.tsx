@@ -1,5 +1,6 @@
-import type { Bot, GameAction } from '../types/game';
+import type { Bot, GameAction, BegRequest as BegRequestType } from '../types/game';
 import HealthBar from './HealthBar';
+import BegRequest from './BegRequest';
 import { Bot as BotIcon, Shield, Swords, HandMetal, Circle, HelpingHand, Copy } from 'lucide-react';
 import './BotDisplay.css';
 
@@ -10,6 +11,8 @@ interface BotDisplayProps {
   observedAction?: GameAction;
   satChange?: number;
   begStatus?: 'approved' | 'rejected' | 'pending';
+  pendingBegRequest?: BegRequestType;
+  onBegResponse?: (approved: boolean, comment: string) => void;
 }
 
 const getActionIcon = (action: string, begStatus?: string) => {
@@ -31,7 +34,7 @@ const getActionIcon = (action: string, begStatus?: string) => {
   }
 };
 
-const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus }: BotDisplayProps) => {
+const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus, pendingBegRequest, onBegResponse }: BotDisplayProps) => {
   const MAX_SATS = 100;
   const healthPercentage = (bot.sats / MAX_SATS) * 100;
 
@@ -109,6 +112,15 @@ const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begS
             )}
           </div>
         </div>
+      )}
+      
+      {pendingBegRequest && onBegResponse && (
+        <BegRequest
+          amount={pendingBegRequest.amount}
+          reason={pendingBegRequest.reason}
+          onAccept={(comment) => onBegResponse(true, comment)}
+          onDecline={(comment) => onBegResponse(false, comment)}
+        />
       )}
     </div>
   );

@@ -4,11 +4,13 @@
   align-items: center;
   gap: 1.5rem;
   padding: 2rem;
+  padding-bottom: 1.5rem;
   background-color: var(--bg-tertiary);
   border-radius: 1rem;
   border: 1px solid var(--border);
   min-width: 280px;
   transition: transform 0.3s ease;
+  position: relative;
 }
 
 .bot-display:hover {
