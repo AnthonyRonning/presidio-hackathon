@@ -19,8 +19,8 @@ export interface GameAction {
   botId: string;
   action: ActionType;
   target?: string;
-  begAmount?: number;
-  begReason?: string;
+  amount?: number;  // For beg action
+  reason?: string;  // For beg action
 }
 
 export interface RoundResult {
@@ -53,4 +53,15 @@ export interface GameState {
 
 export interface SessionData {
   gameId?: string;
+}
+
+export interface GameHistory extends RoundResult {
+  round: number;
+  begRequest?: {
+    botId: string;
+    amount: number;
+    reason: string;
+    approved?: boolean;
+    comment?: string;
+  };
 }

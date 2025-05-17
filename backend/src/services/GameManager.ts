@@ -1,8 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
 import { GameState, Bot, Team, GameAction, RoundResult, ActionType } from '../types';
+import { OpenAIService } from './OpenAIService';
 
 export class GameManager {
   private games: Map<string, GameState> = new Map();
+  private openAIService: OpenAIService;
+
+  constructor() {
+    this.openAIService = new OpenAIService();
+  }
 
   createGame(): GameState {
     const gameId = uuidv4();
@@ -54,7 +60,7 @@ export class GameManager {
     return this.games.get(gameId);
   }
 
-  processNextRound(gameId: string): GameState {
+  async processNextRound(gameId: string): Promise<GameState> {
     const game = this.games.get(gameId);
     if (!game) {
       throw new Error('Game not found');
@@ -86,16 +92,23 @@ export class GameManager {
       return game;
     }
 
-    // For now, let's implement a simple AI strategy
+    // Convert history to GameHistory format for LLM
+    const gameHistory = game.history.map((result, index) => ({
+      ...result,
+      round: index + 1
+    }));
+    
+    // Use OpenAI to select actions for each bot
     const actions: GameAction[] = [];
     
-    // Simple AI: Random actions for now
-    aliveBots.forEach(bot => {
-      const action = this.chooseAction(bot, game);
-      actions.push({
-        botId: bot.id,
-        action: action,
-      });
+    // Process all bots in parallel for better performance
+    const actionPromises = aliveBots.map(bot => 
+      this.openAIService.selectBotAction(bot, game, gameHistory, game.currentRound)
+    );
+    
+    const selectedActions = await Promise.all(actionPromises);
+    selectedActions.forEach(action => {
+      actions.push(action);
     });
 
     // Process actions and calculate results
@@ -140,14 +153,7 @@ export class GameManager {
     return game;
   }
 
-  private chooseAction(bot: Bot, game: GameState): ActionType {
-    // Simple AI strategy for now
-    const actions: ActionType[] = 
-      ['HighFive', 'Attack', 'Block', 'DoNothing', 'Beg'];
-    
-    // Random selection for initial implementation
-    return actions[Math.floor(Math.random() * actions.length)];
-  }
+  // Removed chooseAction method - now using OpenAI service
 
   private processActions(actions: GameAction[], game: GameState): RoundResult {
     const satChanges: { [botId: string]: number } = {};
@@ -179,18 +185,18 @@ export class GameManager {
       
       // Handle Beg action
       if (action.action === 'Beg') {
-        // Hardcoded for now, will be replaced with LLM logic later
+        const gameAction = action as GameAction & { amount?: number; reason?: string };
         const begRequest = {
           botId: action.botId,
-          amount: 5,
-          reason: 'please gimme sats',
+          amount: gameAction.amount || 5,
+          reason: gameAction.reason || 'I need assistance',
           status: 'pending' as const,
         };
         begRequests.push(begRequest);
         game.pendingBegRequests.push({
           botId: action.botId,
-          amount: 5,
-          reason: 'please gimme sats',
+          amount: gameAction.amount || 5,
+          reason: gameAction.reason || 'I need assistance',
         });
       }
     });

@@ -68,14 +68,19 @@ const BotDisplay = ({ bot, side, lastAction, satChange, begStatus }: BotDisplayP
         <div className="last-action">
           <div className="action-container">
             <span className="action-icon">{getActionIcon(lastAction.action, begStatus)}</span>
-            <span className="action-label">
-              {lastAction.action}
-              {lastAction.action === 'Beg' && begStatus && (
-                <span className={`beg-status ${begStatus}`}>
-                  {` (${begStatus})`}
-                </span>
+            <div className="action-details">
+              <div className="action-line">
+                <span className="action-label">{lastAction.action}</span>
+                {lastAction.action === 'Beg' && begStatus && (
+                  <span className={`beg-status ${begStatus}`}>
+                    {` (${begStatus})`}
+                  </span>
+                )}
+              </div>
+              {lastAction.action === 'Beg' && lastAction.reason && (
+                <div className="beg-reason">{`"${lastAction.reason}"`}</div>
               )}
-            </span>
+            </div>
             {satChange !== undefined && (
               <span className={`sats-change ${satChange >= 0 ? 'positive' : 'negative'}`}>
                 {satChange >= 0 ? '+' : ''}{satChange}
