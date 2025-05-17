@@ -1,0 +1,47 @@
+.health-bar-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.health-bar {
+  width: 100%;
+  height: 24px;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 2px solid var(--border);
+}
+
+.health-bar-fill {
+  height: 100%;
+  background-color: var(--success);
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 10px;
+  position: relative;
+}
+
+.health-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  border-radius: 10px;
+}
+
+.health-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fg-secondary);
+}

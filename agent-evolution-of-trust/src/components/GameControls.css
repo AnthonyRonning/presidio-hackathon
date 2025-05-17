@@ -1,0 +1,55 @@
+.game-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+}
+
+.control-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.control-button.primary {
+  background-color: var(--accent);
+  color: white;
+}
+
+.control-button.primary:hover {
+  background-color: #2563eb;
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.control-button.primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.control-button:disabled {
+  background-color: var(--bg-tertiary);
+  color: var(--fg-tertiary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.control-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .control-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,84 @@
+.bot-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background-color: var(--bg-tertiary);
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  min-width: 280px;
+  transition: transform 0.3s ease;
+}
+
+.bot-display:hover {
+  transform: translateY(-4px);
+}
+
+.bot-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+
+.bot-icon-container {
+  position: relative;
+  padding: 1rem;
+}
+
+.bot-icon {
+  color: var(--accent);
+  transition: all 0.3s ease;
+}
+
+.bot-icon.bot-dead {
+  color: var(--danger);
+  opacity: 0.5;
+  transform: rotate(180deg);
+}
+
+.bot-stats {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--fg-tertiary);
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+
+.status-alive {
+  color: var(--success);
+}
+
+.status-dead {
+  color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .bot-display {
+    min-width: 200px;
+    padding: 1.5rem;
+  }
+  
+  .bot-icon {
+    width: 60px;
+    height: 60px;
+  }
+}
