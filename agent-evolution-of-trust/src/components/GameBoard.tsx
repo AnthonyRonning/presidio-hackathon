@@ -10,9 +10,10 @@ interface GameBoardProps {
   onReset: () => void;
   isLoading?: boolean;
   playerCredits?: number;
+  onTopUp?: () => void;
 }
 
-const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading, playerCredits }: GameBoardProps) => {
+const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading, playerCredits, onTopUp }: GameBoardProps) => {
   // Get all bots from all teams
   const allBots = gameState.teams.flatMap(team => team.bots);
   const aliveBots = allBots.filter(bot => bot.isAlive);
@@ -72,9 +73,13 @@ const GameBoard = ({ gameState, onNextRound, onBegResponse, onReset, isLoading, 
           </div>
         )}
         {playerCredits !== undefined && (
-          <div className="player-credits">
+          <button 
+            className="player-credits"
+            onClick={onTopUp}
+            type="button"
+          >
             Your Credits: {playerCredits} sats
-          </div>
+          </button>
         )}
       </div>
       

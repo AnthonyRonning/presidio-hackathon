@@ -59,17 +59,35 @@ declare module 'express-session' {
 // Routes
 app.post('/api/game/create-invoice', async (req, res) => {
   const session = req.session as SessionData;
+  const { topUp } = req.body;
   
   try {
-    // Create a new game
-    const newGame = gameManager.createGame();
-    session.gameId = newGame.id;
+    let gameId: string;
     
-    // Create Lightning invoice
-    const invoice = await sparkService.createGameInvoice(newGame.id);
+    if (topUp && session.gameId && session.invoicePaid) {
+      // Top-up for existing game
+      gameId = session.gameId;
+    } else {
+      // Create a new game
+      const newGame = gameManager.createGame();
+      session.gameId = newGame.id;
+      gameId = newGame.id;
+    }
+    
+    // Create Lightning invoice for top-up amount
+    const amountSats = topUp ? 50 : 150;
+    const memo = topUp 
+      ? `Top-up credits for game ${gameId}` 
+      : `Game credits for game ${gameId}`;
+    
+    const invoice = await sparkService.createGameInvoice(gameId, amountSats, memo);
     session.invoiceId = invoice.id;
-    session.invoicePaid = false;
-    session.playerCredits = 0;
+    
+    // For new games, reset credits and payment status
+    if (!topUp) {
+      session.invoicePaid = false;
+      session.playerCredits = 0;
+    }
     
     req.session.save((err) => {
       if (err) {
@@ -78,7 +96,7 @@ app.post('/api/game/create-invoice', async (req, res) => {
     });
     
     res.json({ 
-      gameId: newGame.id,
+      gameId,
       invoice: invoice.invoice,
       amountSats: invoice.amountSats,
       memo: invoice.memo
@@ -99,9 +117,21 @@ app.get('/api/game/invoice-status', async (req, res) => {
   try {
     const isPaid = await sparkService.checkInvoiceStatus(session.invoiceId);
     
-    if (isPaid && !session.invoicePaid) {
-      session.invoicePaid = true;
-      session.playerCredits = 50; // Player gets 50 sats credit after paying 150
+    // Check invoice details to determine if this is a new payment
+    const currentInvoiceDetails = await sparkService.getInvoiceDetails(session.invoiceId);
+    
+    if (isPaid) {
+      if (!session.invoicePaid) {
+        // Initial payment
+        session.invoicePaid = true;
+        if (currentInvoiceDetails.amountSats === 150) {
+          session.playerCredits = 50; // Initial game: pay 150, get 50 credits
+        }
+      } else if (currentInvoiceDetails.amountSats === 50 && !sparkService.isInvoiceProcessed(session.invoiceId)) {
+        // Top-up payment (only process once)
+        session.playerCredits = (session.playerCredits || 0) + 50;
+        sparkService.markInvoiceAsProcessed(session.invoiceId);
+      }
       
       req.session.save((err) => {
         if (err) {

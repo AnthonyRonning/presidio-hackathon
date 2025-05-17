@@ -128,6 +128,19 @@
   padding: 5px 15px;
   border-radius: 8px;
   border: 1px solid rgba(34, 197, 94, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.player-credits:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.5);
+  transform: translateY(-1px);
+}
+
+.player-credits:active {
+  transform: translateY(0);
 }
 
 .game-controls-overlay {

@@ -81,13 +81,14 @@ export const api = {
     return response.json();
   },
 
-  async createInvoice(): Promise<InvoiceResponse> {
+  async createInvoice(topUp: boolean = false): Promise<InvoiceResponse> {
     const response = await fetch(`${API_URL}/game/create-invoice`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ topUp }),
     });
     
     if (!response.ok) {

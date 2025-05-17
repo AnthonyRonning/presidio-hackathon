@@ -11,6 +11,7 @@ function App() {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isTopUp, setIsTopUp] = useState(false);
   const [playerCredits, setPlayerCredits] = useState(0);
 
   const checkPaymentStatus = useCallback(async () => {
@@ -60,11 +61,13 @@ function App() {
     try {
       const status = await api.checkInvoiceStatus();
       if (!status.isPaid) {
+        setIsTopUp(false);
         setShowPaymentModal(true);
         return;
       }
     } catch {
       // No invoice, show payment modal
+      setIsTopUp(false);
       setShowPaymentModal(true);
       return;
     }
@@ -112,6 +115,12 @@ function App() {
     const status = await api.checkInvoiceStatus();
     setPlayerCredits(status.playerCredits);
     setShowPaymentModal(false);
+    setIsTopUp(false);
+  };
+
+  const handleTopUp = () => {
+    setIsTopUp(true);
+    setShowPaymentModal(true);
   };
 
   if (loading) {
@@ -140,11 +149,16 @@ function App() {
         onReset={handleReset}
         isLoading={isActionLoading}
         playerCredits={playerCredits}
+        onTopUp={handleTopUp}
       />
       {showPaymentModal && (
         <PaymentModal 
           onPaymentComplete={handlePaymentComplete}
-          onClose={() => setShowPaymentModal(false)}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setIsTopUp(false);
+          }}
+          isTopUp={isTopUp}
         />
       )}
     </div>

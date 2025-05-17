@@ -8,9 +8,10 @@ import './PaymentModal.css';
 interface PaymentModalProps {
   onPaymentComplete: () => void;
   onClose?: () => void;
+  isTopUp?: boolean;
 }
 
-export default function PaymentModal({ onPaymentComplete, onClose }: PaymentModalProps) {
+export default function PaymentModal({ onPaymentComplete, onClose, isTopUp = false }: PaymentModalProps) {
   const [invoice, setInvoice] = useState<InvoiceResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export default function PaymentModal({ onPaymentComplete, onClose }: PaymentModa
   const createInvoice = async () => {
     try {
       setLoading(true);
-      const invoiceData = await api.createInvoice();
+      const invoiceData = await api.createInvoice(isTopUp);
       setInvoice(invoiceData);
       setError(null);
       
@@ -84,8 +85,8 @@ export default function PaymentModal({ onPaymentComplete, onClose }: PaymentModa
           <>
             <div className="modal-header">
               <Zap size={32} />
-              <h3>Game Entry</h3>
-              <p>150 sats • 50 credit bonus</p>
+              <h3>{isTopUp ? 'Top Up Credits' : 'Game Entry'}</h3>
+              <p>{isTopUp ? '50 sats for 50 credits' : '150 sats • 50 credit bonus'}</p>
             </div>
 
             {invoice && (

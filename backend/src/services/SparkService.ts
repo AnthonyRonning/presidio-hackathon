@@ -11,6 +11,8 @@ export interface LightningInvoice {
 export class SparkService {
     private wallet: SparkWallet | null = null;
     private invoiceStatus: Map<string, boolean> = new Map();
+    private invoiceDetails: Map<string, LightningInvoice> = new Map();
+    private processedInvoices: Set<string> = new Set();
 
     async initialize(): Promise<void> {
         if (this.wallet) return;
@@ -43,7 +45,7 @@ export class SparkService {
         }
     }
 
-    async createGameInvoice(gameId: string): Promise<LightningInvoice> {
+    async createGameInvoice(gameId: string, amountSats: number = 150, memo?: string): Promise<LightningInvoice> {
         if (!this.wallet) {
             await this.initialize();
         }
@@ -54,8 +56,8 @@ export class SparkService {
 
         try {
             const lightningReceiveRequest = await this.wallet.createLightningInvoice({
-                amountSats: 150,
-                memo: `Game credits for game ${gameId}`
+                amountSats,
+                memo: memo || `Game credits for game ${gameId}`
             });
 
             console.log('Created Lightning invoice:', {
@@ -64,13 +66,18 @@ export class SparkService {
                 paymentHash: lightningReceiveRequest.invoice.paymentHash
             });
 
-            return {
+            const invoiceData = {
                 id: lightningReceiveRequest.id,
                 invoice: lightningReceiveRequest.invoice.encodedInvoice,
-                amountSats: 150,
-                memo: `Game credits for game ${gameId}`,
+                amountSats,
+                memo: memo || `Game credits for game ${gameId}`,
                 isPaid: false
             };
+            
+            // Store invoice details for later retrieval
+            this.invoiceDetails.set(lightningReceiveRequest.id, invoiceData);
+            
+            return invoiceData;
         } catch (error) {
             console.error('Failed to create Lightning invoice:', error);
             throw error;
@@ -126,6 +133,22 @@ export class SparkService {
         };
 
         this.wallet.on('transfer:claimed', handleTransferClaimed);
+    }
+
+    async getInvoiceDetails(invoiceId: string): Promise<LightningInvoice> {
+        const details = this.invoiceDetails.get(invoiceId);
+        if (!details) {
+            throw new Error('Invoice details not found');
+        }
+        return details;
+    }
+
+    isInvoiceProcessed(invoiceId: string): boolean {
+        return this.processedInvoices.has(invoiceId);
+    }
+
+    markInvoiceAsProcessed(invoiceId: string): void {
+        this.processedInvoices.add(invoiceId);
     }
 }
 
