@@ -9,9 +9,10 @@ interface GameBoardProps {
   onNextRound: () => void;
   onBegResponse: (botId: string, approved: boolean, comment: string) => void;
   onReset: () => void;
+  isLoading?: boolean;
 }
 
-const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
+const GameBoard = ({ gameState, onNextRound, onReset, isLoading }: GameBoardProps) => {
   // Get all bots from all teams
   const allBots = gameState.teams.flatMap(team => team.bots);
   const aliveBots = allBots.filter(bot => bot.isAlive);
@@ -97,6 +98,7 @@ const GameBoard = ({ gameState, onNextRound, onReset }: GameBoardProps) => {
         gameState={gameState} 
         onNextRound={onNextRound}
         onReset={onReset}
+        isLoading={isLoading}
       />
     </div>
   );

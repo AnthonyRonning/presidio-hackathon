@@ -8,6 +8,7 @@ import { api } from './utils/api';
 function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ function App() {
 
   const handleNextRound = async () => {
     try {
-      setLoading(true);
+      setIsActionLoading(true);
       const game = await api.nextRound();
       setGameState(game);
       setError(null);
@@ -38,7 +39,7 @@ function App() {
       setError('Failed to advance round');
       console.error(err);
     } finally {
-      setLoading(false);
+      setIsActionLoading(false);
     }
   };
 
@@ -55,7 +56,7 @@ function App() {
 
   const handleReset = async () => {
     try {
-      setLoading(true);
+      setIsActionLoading(true);
       const game = await api.resetGame();
       setGameState(game);
       setError(null);
@@ -63,7 +64,7 @@ function App() {
       setError('Failed to reset game');
       console.error(err);
     } finally {
-      setLoading(false);
+      setIsActionLoading(false);
     }
   };
 
@@ -99,6 +100,7 @@ function App() {
         onNextRound={handleNextRound}
         onBegResponse={handleBegResponse}
         onReset={handleReset}
+        isLoading={isActionLoading}
       />
       
       {currentBegRequest && requestingBot && (
