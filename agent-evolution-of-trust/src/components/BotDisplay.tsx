@@ -38,7 +38,30 @@ const getActionIcon = (action: string, begStatus?: string) => {
 const BotDisplay = ({ bot, side, intendedAction, observedAction, satChange, begStatus, pendingBegRequest, onBegResponse, playerNumber = 1 }: BotDisplayProps) => {
   const MAX_SATS = 100;
   const healthPercentage = (bot.sats / MAX_SATS) * 100;
-  const playerImage = `/player${playerNumber}-neutral.png`;
+  
+  // Determine which image to show based on last action
+  const getPlayerImage = () => {
+    if (!bot.isAlive) {
+      return `/player${playerNumber}-dead.png`;
+    }
+    
+    const lastAction = observedAction?.action || intendedAction?.action;
+    switch (lastAction) {
+      case 'Attack':
+        return `/player${playerNumber}-attack.png`;
+      case 'Block':
+        return `/player${playerNumber}-block.png`;
+      case 'Beg':
+        // Use mercy image if health is below 50%
+        return bot.sats < 50 ? `/player${playerNumber}-mercy.png` : `/player${playerNumber}-beg.png`;
+      case 'HighFive':
+        return `/player${playerNumber}-neutral.png`; // or create a high-five image
+      default:
+        return `/player${playerNumber}-neutral.png`;
+    }
+  };
+  
+  const playerImage = getPlayerImage();
 
   return (
     <div className={`bot-display ${side}`}>
