@@ -7,10 +7,11 @@ interface HealthBarProps {
 }
 
 const HealthBar = ({ current, max, percentage }: HealthBarProps) => {
-  const getHealthColor = () => {
-    if (percentage > 60) return 'var(--success)';
-    if (percentage > 30) return 'var(--warning)';
-    return 'var(--danger)';
+  const getBackgroundPosition = () => {
+    // Gradient is from green to yellow to red
+    // We want to show green when health is high, red when low
+    const position = ((100 - percentage) / 100) * 100;
+    return `${position}% 0`;
   };
 
   return (
@@ -20,7 +21,7 @@ const HealthBar = ({ current, max, percentage }: HealthBarProps) => {
           className="health-bar-fill" 
           style={{ 
             width: `${Math.max(0, Math.min(100, percentage))}%`,
-            backgroundColor: getHealthColor()
+            backgroundPosition: getBackgroundPosition()
           }}
         />
       </div>
