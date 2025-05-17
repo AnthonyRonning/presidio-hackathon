@@ -25,7 +25,7 @@ Actions
 - Block (costs points, gets more points back if it successfully blocks).
 - Attack (hurts other player, gets some of their points, if blocked, hurts them even more).
 - Do nothing (no points lost unless attacked, or three turns in a row where they did nothing so they lose points)
-- beg (optional message) - user decides whether or not they get points
+- beg (optional message) - costs 1 point, user decides whether or not they get additional points
 - Replicate available if you have enough points, you get an additional character on your team with two actions per turn now.
 ```
 
