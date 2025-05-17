@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import './index.css';
 import type { GameState } from './types/game';
 import GameBoard from './components/GameBoard';
-import PaymentGate from './components/PaymentGate';
+import PaymentModal from './components/PaymentModal';
 import { api } from './utils/api';
 
 function App() {
@@ -10,15 +10,15 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentComplete, setPaymentComplete] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [playerCredits, setPlayerCredits] = useState(0);
 
   const checkPaymentStatus = useCallback(async () => {
     try {
       const status = await api.checkInvoiceStatus();
       if (status.isPaid) {
-        setPaymentComplete(true);
         setPlayerCredits(status.playerCredits);
+        setShowPaymentModal(false);
         return true;
       }
     } catch {
@@ -31,8 +31,9 @@ function App() {
   useEffect(() => {
     const checkAndLoadGame = async () => {
       const isPaid = await checkPaymentStatus();
-      if (isPaid) {
-        await loadGame();
+      await loadGame(); // Always load the game
+      if (!isPaid) {
+        setShowPaymentModal(true); // Show modal if not paid
       }
     };
     
@@ -55,6 +56,19 @@ function App() {
   };
 
   const handleNextRound = async () => {
+    // Check if user has paid before allowing to play
+    try {
+      const status = await api.checkInvoiceStatus();
+      if (!status.isPaid) {
+        setShowPaymentModal(true);
+        return;
+      }
+    } catch {
+      // No invoice, show payment modal
+      setShowPaymentModal(true);
+      return;
+    }
+
     try {
       setIsActionLoading(true);
       const game = await api.nextRound();
@@ -96,15 +110,9 @@ function App() {
 
   const handlePaymentComplete = async () => {
     const status = await api.checkInvoiceStatus();
-    setPaymentComplete(true);
     setPlayerCredits(status.playerCredits);
-    await loadGame();
+    setShowPaymentModal(false);
   };
-
-  // Show payment gate if not paid
-  if (!paymentComplete) {
-    return <PaymentGate onPaymentComplete={handlePaymentComplete} />;
-  }
 
   if (loading) {
     return <div className="app-loading">Loading...</div>;
@@ -133,6 +141,12 @@ function App() {
         isLoading={isActionLoading}
         playerCredits={playerCredits}
       />
+      {showPaymentModal && (
+        <PaymentModal 
+          onPaymentComplete={handlePaymentComplete}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
     </div>
   );
 }
