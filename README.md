@@ -9,3 +9,6 @@ Project repository setup in progress.
 ## Documentation
 - [Hackathon Guidelines](docs/hackathon-guidelines.md)
 - [Project Ideas](docs/ideas.md)
+
+Screenshot
+- ![Screenshot](/docs/darwin-screenshot.jpg)
